@@ -6,7 +6,6 @@ import android.net.Uri
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
-import net.openid.appauth.CodeVerifierUtil
 import net.openid.appauth.ResponseTypeValues
 
 object SpotifyAuth {
@@ -27,10 +26,6 @@ object SpotifyAuth {
             Uri.parse(TOKEN_ENDPOINT)
         )
 
-        // PKCE
-        val verifier = CodeVerifierUtil.generateRandomCodeVerifier()
-        val challenge = CodeVerifierUtil.deriveCodeVerifierChallenge(verifier)
-
         val request = AuthorizationRequest.Builder(
             cfg,
             clientId,
@@ -38,7 +33,6 @@ object SpotifyAuth {
             Uri.parse(redirectUri)
         )
             .setScope(SCOPE)
-            .setCodeVerifier(verifier, challenge, "S256")
             .build()
 
         activity.startActivity(authService?.getAuthorizationRequestIntent(request))
