@@ -1,6 +1,8 @@
 package com.cs407.chatgplaylist
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,9 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -22,9 +26,22 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+object AppState {
+    val displayName = mutableStateOf<String?>(null)
+}
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        var signedInDisplayName: String? = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -34,6 +51,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (SpotifyAuth.isSpotifyRedirect(intent)) {
+            Toast.makeText(this, "Returned from Spotify auth", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun startSpotifyAuth() {
+        val clientId = getString(R.string.spotify_client_id)
+        val redirect = getString(R.string.spotify_redirect_uri)
+        SpotifyAuth.startSignIn(this, clientId, redirect)
+    }
+
 }
 
 @Composable
@@ -42,12 +73,15 @@ fun AppNavigation() {
 
     NavHost(navController = navController, startDestination = "upload") {
         composable("upload") { UploadScreen(navController) }
-        composable("playlist") { PlaylistScreen(navController) } // 👈 pass it in
+        composable("playlist") { PlaylistScreen(navController) }
     }
 }
 
 @Composable
 fun UploadScreen(navController: NavController) {
+    val context = LocalContext.current
+    val activity = context as? MainActivity
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -84,6 +118,14 @@ fun UploadScreen(navController: NavController) {
             ) {
                 Text("Submit")
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { activity?.startSpotifyAuth() },
+            ) {
+                Text("Connect Spotify")
+            }
         }
     }
 }
@@ -91,6 +133,9 @@ fun UploadScreen(navController: NavController) {
 @Composable
 fun PlaylistScreen(navController: NavController) {
     val songs = List(20) { "Song Title ${it + 1}" to "Artist ${it + 1}" }
+    val context = LocalContext.current
+    val activity = context as? MainActivity
+    val name = AppState.displayName.value
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
@@ -134,7 +179,7 @@ fun PlaylistScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* TODO: integrate with Spotify later */ },
+                onClick = {},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

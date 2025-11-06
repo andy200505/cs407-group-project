@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ChatGPlaylisT</string>
+    <string name="spotify_client_id">8458d319b1cd40bab51ec743f814618c</string>
+    <string name="spotify_redirect_uri">chatgplaylist://callback</string>
+    <string name="spotify_redirect_scheme">chatgplaylist</string>
+    <string name="spotify_redirect_host">callback</string>
+
 </resources>
