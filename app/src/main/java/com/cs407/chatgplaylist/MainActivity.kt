@@ -2,6 +2,7 @@ package com.cs407.chatgplaylist
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,10 +27,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
+import com.cs407.chatgplaylist.spotify.SpotifyDemo
 import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 object AppState {
@@ -55,7 +56,25 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (SpotifyAuth.isSpotifyRedirect(intent)) {
-            Toast.makeText(this, "Returned from Spotify auth", Toast.LENGTH_SHORT).show()
+            SpotifyAuth.handleRedirect(intent) { result ->
+                runOnUiThread {
+                    when (result) {
+                        is SpotifyAuth.Result.Success -> {
+                            Log.d("SpotifyAuth", "Access token received")
+                            Toast.makeText(this, "Spotify connected", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                        is SpotifyAuth.Result.Error -> {
+                            Log.w("SpotifyAuth", "Auth failed: ${result.message}")
+                            Toast.makeText(
+                                this,
+                                "Spotify login failed: ${result.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -63,6 +82,32 @@ class MainActivity : ComponentActivity() {
         val clientId = getString(R.string.spotify_client_id)
         val redirect = getString(R.string.spotify_redirect_uri)
         SpotifyAuth.startSignIn(this, clientId, redirect)
+    }
+
+    fun createDemoPlaylist() {
+        val token = SpotifyAuth.currentAccessToken()
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(this, "Connect Spotify first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        lifecycleScope.launch {
+            when (val result = SpotifyDemo.createSamplePlaylist(token)) {
+                is SpotifyDemo.Result.Success -> {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Playlist \"${result.playlistName}\" created.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                is SpotifyDemo.Result.Error -> {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Spotify error: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
 }
@@ -179,7 +224,7 @@ fun PlaylistScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = {},
+                onClick = { activity?.createDemoPlaylist() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
