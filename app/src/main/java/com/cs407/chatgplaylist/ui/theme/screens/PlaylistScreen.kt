@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.R
+import com.cs407.chatgplaylist.ui.theme.components.SongItem
 
 @Composable
 fun PlaylistScreen(navController: NavController) {
@@ -27,7 +28,7 @@ fun PlaylistScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .padding(innerPadding)
                 .padding(top = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -92,30 +93,4 @@ fun PlaylistScreen(navController: NavController) {
             )
         }
     }
-}
-
-@Composable
-fun SongItem(title: String, artist: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = artist, style = MaterialTheme.typography.bodyMedium)
-        }
-
-        Image(
-            painter = painterResource(id = R.drawable.spotify),
-            contentDescription = "Spotify Logo",
-            modifier = Modifier
-                .size(24.dp)
-                .padding(start = 8.dp)
-        )
-    }
-
-    Divider(modifier = Modifier.padding(top = 8.dp))
 }
