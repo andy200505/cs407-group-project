@@ -14,9 +14,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.R
+import com.cs407.chatgplaylist.data.UserState
 
 @Composable
-fun UploadScreen(navController: NavController) {
+fun UploadScreen(navController: NavController, userState: UserState) {
     var playlistDescription by remember { mutableStateOf("") }
 
     Scaffold(
