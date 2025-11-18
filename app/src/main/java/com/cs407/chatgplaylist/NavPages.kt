@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.User
 import com.cs407.chatgplaylist.data.UserState
+import com.cs407.chatgplaylist.ui.theme.screens.LoadingScreen
 import com.cs407.chatgplaylist.ui.theme.screens.LoginPage
 import com.cs407.chatgplaylist.ui.theme.screens.PlaylistScreen
 import com.cs407.chatgplaylist.ui.theme.screens.ProfileScreen
@@ -49,29 +50,49 @@ fun AppNavigation() {
     val startDestination = if (Firebase.auth.currentUser != null) "upload" else "login"
 
 
-        NavHost(navController = navController, startDestination = startDestination) {
-            composable("login") {
-                LoginPage(navController) { newUser ->
-                    userState = newUser
-                    navController.navigate("upload") {
-                        popUpTo("login") { inclusive = true }
-                    }
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable("login") {
+            LoginPage(navController) { newUser ->
+                userState = newUser
+                navController.navigate("upload") {
+                    popUpTo("login") { inclusive = true }
                 }
             }
+        }
 
-            composable("upload") {
-                userState?.let {
-                    UploadScreen(navController, it)
+        composable("upload") {
+            userState?.let { UploadScreen(navController, it) }
+        }
+
+        composable("playlist/{playlistId}") { backStackEntry ->
+            val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
+            PlaylistScreen(navController, playlistId)
+        }
+
+        composable("profile") {
+            userState?.let { ProfileScreen(navController, it) }
+        }
+
+        composable("loading/{playlistId}") { backStackEntry ->
+            val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
+            LoadingScreen()
+            val context = LocalContext.current
+            val db = remember { PlaylistDatabase.getDatabase(context) }
+
+            LaunchedEffect(playlistId) {
+                val playlistDao = db.playlistDao()
+
+                // TODO: call backend AI to generate songs
+                // use isLoading to wait for the playlist to be generated until
+                // navigating to PlaylistScreen. Navigating before then will
+                // cause the playlist to appear empty
+
+                //once ready, go to PlaylistScreen
+                navController.navigate("playlist/$playlistId") {
+                    popUpTo("upload") { inclusive = false }
                 }
             }
-
-            composable("playlist") {
-                userState?.let { PlaylistScreen(navController) }
-            }
-
-            composable("profile") {
-                userState?.let { ProfileScreen(navController, it) }
-            }
+        }
 
     }
 }

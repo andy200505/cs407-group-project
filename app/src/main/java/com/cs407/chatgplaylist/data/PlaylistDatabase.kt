@@ -70,6 +70,15 @@ interface PlaylistDao {
         insertSongs(songs.map { it.copy(playlistId = playlistId.toInt()) })
         return playlistId
     }
+
+    @Update
+    suspend fun updatePlaylist(playlist: Playlist)
+
+    @Query("SELECT * FROM Playlist WHERE playlistId = :playlistId")
+    suspend fun getPlaylistById(playlistId: Int): Playlist?
+
+    @Query("SELECT * FROM Song WHERE playlistId = :playlistId")
+    suspend fun getSongsForPlaylist(playlistId: Int): List<Song>
 }
 
 @Dao
@@ -84,6 +93,18 @@ interface DeleteDao {
     suspend fun deleteUserAndPlaylists(userId: Int) {
         deleteAllPlaylistsForUser(userId)
         deleteUser(userId)
+    }
+
+    @Query("DELETE FROM Playlist WHERE playlistId = :playlistId")
+    suspend fun deletePlaylistById(playlistId: Int)
+
+    @Query("DELETE FROM Song WHERE playlistId = :playlistId")
+    suspend fun deleteSongsForPlaylist(playlistId: Int)
+
+    @Transaction
+    suspend fun deletePlaylistAndSongs(playlistId: Int) {
+        deleteSongsForPlaylist(playlistId)
+        deletePlaylistById(playlistId)
     }
 }
 

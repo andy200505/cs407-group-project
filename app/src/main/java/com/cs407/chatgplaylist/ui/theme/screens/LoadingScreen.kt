@@ -17,17 +17,11 @@ import androidx.compose.ui.unit.dp
 //}
 
 @Composable
-fun LoadingScreen(message: String = "Loading...") {
+fun LoadingScreen() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = message, style = MaterialTheme.typography.bodyLarge)
-        }
+        CircularProgressIndicator()
     }
 }
