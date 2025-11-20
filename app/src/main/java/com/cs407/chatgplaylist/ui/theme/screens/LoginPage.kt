@@ -38,13 +38,13 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.userProfileChangeRequest
 
 @Composable
-fun ErrorText(error: String?, modifier: Modifier = Modifier) {
+fun ErrorText(error: String?) {
     if (error != null)
         Text(text = error, color = Color.Red, textAlign = TextAlign.Center)
 }
 
 @Composable
-fun userEmail(modifier: Modifier = Modifier): String {
+fun userEmail(): String {
     var email by remember { mutableStateOf("") }
 
     TextField(
@@ -56,7 +56,7 @@ fun userEmail(modifier: Modifier = Modifier): String {
 }
 
 @Composable
-fun userPassword(modifier: Modifier = Modifier): String {
+fun userPassword(): String {
     var passwd by remember { mutableStateOf("") }
 
     TextField(
@@ -106,8 +106,7 @@ fun signIn(
 fun LogInSignUpButton(
     email: String,
     password: String,
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
-    modifier: Modifier = Modifier
+    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit
 ) {
     val context = LocalContext.current
 //    val userPasswdKV =
@@ -211,7 +210,6 @@ fun updateName(name: String, onComplete: (Boolean, Exception?, FirebaseUser?) ->
 @Composable
 fun AskNamePage(
     onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     var name by remember { mutableStateOf("") }
 
@@ -229,7 +227,6 @@ fun AskNamePage(
 
 @Composable
 fun LoginPage(
-    navController: androidx.navigation.NavController,
     modifier: Modifier = Modifier,
     onLoginComplete: (UserState) -> Unit
 ) {
@@ -252,7 +249,9 @@ fun LoginPage(
                             user = playlistDB.userDao().getByUID(signedUser.uid)
                         }
                     }
-                    onLoginComplete(UserState(user!!.userId, signedUser.displayName!!, signedUser.uid!!))
+                    onLoginComplete(UserState(user!!.userId, signedUser.displayName!!,
+                        signedUser.uid
+                    ))
                 } else {
                     askName = true
                 }

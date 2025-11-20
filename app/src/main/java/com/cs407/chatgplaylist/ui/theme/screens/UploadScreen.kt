@@ -32,7 +32,7 @@ fun UploadScreen(navController: NavController, userState: UserState) {
 
     // Load playlists belonging to this Room userId
     var playlists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
-
+    var playlistDescription by remember { mutableStateOf("") }
     LaunchedEffect(userState.id) {
         if (userState.id != 0) {
             playlists = playlistDao.getPlaylistsWithSongs(userState.id)
@@ -123,7 +123,6 @@ fun UploadScreen(navController: NavController, userState: UserState) {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    /*
                     TextField(
                         value = playlistDescription,
                         onValueChange = { playlistDescription = it },
@@ -135,13 +134,15 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                         singleLine = false,
                         maxLines = 3
                     )
-                    */
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         onClick = {
                             scope.launch {
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("prompt", playlistDescription)
                                 //insert playlist with temp title
                                 val tempPlaylist = Playlist(
                                     playlistId = 0,

@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.espresso.contrib)
+    implementation(libs.generativeai)
     annotationProcessor(libs.androidx.room.compiler)
     // To use Kotlin Symbol Processing (KSP)
     ksp(libs.androidx.room.compiler)

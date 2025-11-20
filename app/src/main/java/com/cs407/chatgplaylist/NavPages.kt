@@ -1,18 +1,17 @@
 package com.cs407.chatgplaylist
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.chatgplaylist.data.PlaylistDatabase
+import com.cs407.chatgplaylist.data.Song
 import com.cs407.chatgplaylist.data.User
 import com.cs407.chatgplaylist.data.UserState
 import com.cs407.chatgplaylist.ui.theme.screens.LoadingScreen
@@ -20,8 +19,9 @@ import com.cs407.chatgplaylist.ui.theme.screens.LoginPage
 import com.cs407.chatgplaylist.ui.theme.screens.PlaylistScreen
 import com.cs407.chatgplaylist.ui.theme.screens.ProfileScreen
 import com.cs407.chatgplaylist.ui.theme.screens.UploadScreen
-import com.google.firebase.auth.auth
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -52,7 +52,7 @@ fun AppNavigation() {
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
-            LoginPage(navController) { newUser ->
+            LoginPage() { newUser ->
                 userState = newUser
                 navController.navigate("upload") {
                     popUpTo("login") { inclusive = true }
@@ -76,18 +76,70 @@ fun AppNavigation() {
         composable("loading/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
             LoadingScreen()
+
             val context = LocalContext.current
             val db = remember { PlaylistDatabase.getDatabase(context) }
+
+            // Gemini model (reuse the API key from your example)
+            val model = GenerativeModel(
+                modelName = "gemini-2.0-flash",
+                apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
+            )
 
             LaunchedEffect(playlistId) {
                 val playlistDao = db.playlistDao()
 
-                // TODO: call backend AI to generate songs
-                // use isLoading to wait for the playlist to be generated until
-                // navigating to PlaylistScreen. Navigating before then will
-                // cause the playlist to appear empty
+                // Prompt that was stored in UploadScreen
+                val userPrompt = navController
+                    .getBackStackEntry("upload")
+                    .savedStateHandle
+                    .get<String>("prompt")
+                    .orEmpty()
+                val prompt = """
+                    Create a playlist of about 10 songs based on the following description:
+                    "$userPrompt"
+                    Return ONLY a plain text list of songs, one per line. Each line must be in the exact format: Song name - Artist
+                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+                    .trimIndent()
 
-                //once ready, go to PlaylistScreen
+                // Call Gemini and get raw text
+                val rawText = if (userPrompt.isNotBlank()) {
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            model.generateContent(prompt)
+                        }
+                        result.text ?: ""
+                    } catch (e: Exception) {
+                        "Error generating playlist: ${e.message}"
+                    }
+                } else {
+                    "No prompt provided."
+                }
+
+                val items = rawText
+                    .lines()
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+
+                withContext(Dispatchers.IO) {
+                    val songsToInsert = items.map { line ->
+                        val parts = line.split("-", limit = 2)
+                        val title = parts.getOrNull(0)?.trim().orEmpty()
+                        val artist = parts.getOrNull(1)?.trim().orEmpty()
+
+                        Song(
+                            songId = 0,              // auto-generate
+                            playlistId = playlistId, // FK
+                            title = title,
+                            artist = artist
+                        )
+
+                    }
+                    if (songsToInsert.isNotEmpty()) {
+                        playlistDao.insertSongs(songsToInsert)
+                    }
+                }
+
                 navController.navigate("playlist/$playlistId") {
                     popUpTo("upload") { inclusive = false }
                 }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,5 +42,9 @@ fun SongItem(title: String, artist: String) {
         )
     }
 
-    Divider(modifier = Modifier.padding(top = 8.dp))
+    HorizontalDivider(
+        modifier = Modifier.padding(top = 8.dp),
+        thickness = DividerDefaults.Thickness,
+        color = DividerDefaults.color
+    )
 }
