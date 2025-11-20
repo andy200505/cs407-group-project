@@ -59,9 +59,6 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
         }
     }
 
-    //demo songs
-    //val songs = List(20) { "Song Title ${it + 1}" to "Artist ${it + 1}" }
-
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -70,14 +67,6 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
                 .padding(top = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            /*
-            Text(
-                text = "Success! Here's your playlist",
-                style = MaterialTheme.typography.headlineMedium
-            )
-             */
-
             Spacer(modifier = Modifier.height(20.dp))
 
             //title

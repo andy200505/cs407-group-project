@@ -29,7 +29,6 @@ fun UploadScreen(navController: NavController, userState: UserState) {
     val context = LocalContext.current
     val db = remember { PlaylistDatabase.getDatabase(context) }
     val playlistDao = db.playlistDao()
-
     // Load playlists belonging to this Room userId
     var playlists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
     var playlistDescription by remember { mutableStateOf("") }
@@ -143,11 +142,10 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle
                                     ?.set("prompt", playlistDescription)
-                                //insert playlist with temp title
                                 val tempPlaylist = Playlist(
                                     playlistId = 0,
                                     userId = userState.id,
-                                    title = "" //temporary title
+                                    title = ""
                                 )
                                 val newId = playlistDao.insertPlaylist(tempPlaylist).toInt()
 

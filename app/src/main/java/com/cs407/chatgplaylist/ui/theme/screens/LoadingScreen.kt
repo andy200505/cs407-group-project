@@ -7,13 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-//example usage:
-//if (isLoading) {
-//    LoadingScreen(message = "Generating your playlist...")
-//} else {
-//    PlaylistScreen(navController)
-//}
-
 @Composable
 fun LoadingScreen() {
     Box(

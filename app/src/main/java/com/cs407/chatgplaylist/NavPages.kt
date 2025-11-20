@@ -29,7 +29,6 @@ import kotlinx.coroutines.withContext
 fun AppNavigation() {
     val navController = rememberNavController()
     var userState by remember { mutableStateOf<UserState?>(null) }
-    //to be used when playlist is generating
     var isLoading by remember { mutableStateOf(true) }
 
     val context = LocalContext.current
@@ -79,8 +78,6 @@ fun AppNavigation() {
 
             val context = LocalContext.current
             val db = remember { PlaylistDatabase.getDatabase(context) }
-
-            // Gemini model (reuse the API key from your example)
             val model = GenerativeModel(
                 modelName = "gemini-2.0-flash",
                 apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
@@ -88,8 +85,6 @@ fun AppNavigation() {
 
             LaunchedEffect(playlistId) {
                 val playlistDao = db.playlistDao()
-
-                // Prompt that was stored in UploadScreen
                 val userPrompt = navController
                     .getBackStackEntry("upload")
                     .savedStateHandle
@@ -102,7 +97,6 @@ fun AppNavigation() {
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
 
-                // Call Gemini and get raw text
                 val rawText = if (userPrompt.isNotBlank()) {
                     try {
                         val result = withContext(Dispatchers.IO) {
@@ -128,8 +122,8 @@ fun AppNavigation() {
                         val artist = parts.getOrNull(1)?.trim().orEmpty()
 
                         Song(
-                            songId = 0,              // auto-generate
-                            playlistId = playlistId, // FK
+                            songId = 0,
+                            playlistId = playlistId,
                             title = title,
                             artist = artist
                         )
