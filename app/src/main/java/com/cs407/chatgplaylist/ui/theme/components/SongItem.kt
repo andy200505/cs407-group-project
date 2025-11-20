@@ -2,7 +2,6 @@ package com.cs407.chatgplaylist.ui.theme.components
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,28 +27,21 @@ import com.cs407.chatgplaylist.R
 fun SongItem(title: String, artist: String, spotifyUrl: String? = null) {
     val context = LocalContext.current
     val hasLink = !spotifyUrl.isNullOrEmpty()
-    val rowModifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp)
-        .alpha(if (hasLink) 1f else 0.6f)
-        .let {
-            if (hasLink) {
-                it.clickable {
-                    runCatching {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(spotifyUrl))
-                        context.startActivity(intent)
-                    }.onFailure {
-                        Toast.makeText(context, "Unable to open Spotify link.", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
-            } else {
-                it
-            }
+    val onOpen: (() -> Unit)? = if (hasLink) {
+        {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(spotifyUrl))
+            context.startActivity(intent)
         }
+    } else null
 
     Row(
-        modifier = rowModifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .alpha(if (hasLink) 1f else 0.6f)
+            .let { base ->
+                if (onOpen != null) base.clickable { onOpen() } else base
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -65,6 +57,9 @@ fun SongItem(title: String, artist: String, spotifyUrl: String? = null) {
                 .size(24.dp)
                 .padding(start = 8.dp)
                 .alpha(if (hasLink) 1f else 0.3f)
+                .let { base ->
+                    if (onOpen != null) base.clickable { onOpen() } else base
+                }
         )
     }
 
