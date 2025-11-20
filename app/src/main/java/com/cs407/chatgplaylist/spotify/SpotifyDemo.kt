@@ -42,6 +42,24 @@ object SpotifyDemo {
             }
         }
 
+    suspend fun createPlaylistFromSongs(
+        accessToken: String,
+        songs: List<com.cs407.chatgplaylist.data.Song>
+    ): Result = withContext(Dispatchers.IO) {
+        val trackUris = songs.mapNotNull { it.spotifyUri }.distinct()
+        if (trackUris.isEmpty()) {
+            return@withContext Result.Error("No Spotify tracks available for this playlist.")
+        }
+        try {
+            val user = fetchCurrentUser(accessToken)
+            val playlist = createPlaylist(accessToken, user.id)
+            addTracks(accessToken, playlist.id, trackUris)
+            Result.Success(playlist.name)
+        } catch (io: IOException) {
+            Result.Error(io.message ?: "Spotify error.")
+        }
+    }
+
     private data class Playlist(val id: String, val name: String)
     private data class User(val id: String)
 
@@ -94,9 +112,9 @@ object SpotifyDemo {
         }
     }
 
-    private fun addTracks(token: String, playlistId: String) {
+    private fun addTracks(token: String, playlistId: String, uris: List<String> = sampleTrackUris) {
         val payload = JSONObject().apply {
-            put("uris", JSONArray(sampleTrackUris))
+            put("uris", JSONArray(uris))
         }
         val request = Request.Builder()
             .url("https://api.spotify.com/v1/playlists/$playlistId/tracks")

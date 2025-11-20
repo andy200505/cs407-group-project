@@ -113,7 +113,7 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { activity?.createDemoPlaylist() },
+                onClick = { activity?.createDemoPlaylist(playlistId) },
                 enabled = isSpotifyConnected && activity != null,
                 modifier = Modifier
                     .width(200.dp)

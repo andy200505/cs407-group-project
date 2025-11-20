@@ -10,9 +10,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
+import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
 import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -61,7 +64,7 @@ class MainActivity : ComponentActivity() {
         SpotifyAuth.startSignIn(this, clientId, redirect)
     }
 
-    fun createDemoPlaylist() {
+    fun createDemoPlaylist(playlistId: Int? = null) {
         val token = SpotifyAuth.currentAccessToken()
         if (token.isNullOrEmpty()) {
             Toast.makeText(this, "Connect Spotify first.", Toast.LENGTH_SHORT).show()
@@ -69,22 +72,34 @@ class MainActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            when (val result = SpotifyDemo.createSamplePlaylist(token)) {
-                is SpotifyDemo.Result.Success -> {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Playlist \"${result.playlistName}\" created.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                is SpotifyDemo.Result.Error -> {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Spotify error: ${result.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+            val result = if (playlistId == null) {
+                SpotifyDemo.createSamplePlaylist(token)
+            } else {
+                createPlaylistFromDb(token, playlistId)
             }
+            when (result) {
+                is SpotifyDemo.Result.Success -> Toast.makeText(
+                    this@MainActivity,
+                    "Playlist \"${result.playlistName}\" created.",
+                    Toast.LENGTH_LONG
+                ).show()
+                is SpotifyDemo.Result.Error -> Toast.makeText(
+                    this@MainActivity,
+                    "Spotify error: ${result.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private suspend fun createPlaylistFromDb(
+        token: String,
+        playlistId: Int
+    ): SpotifyDemo.Result {
+        return withContext(Dispatchers.IO) {
+            val db = PlaylistDatabase.getDatabase(applicationContext)
+            val songs = db.playlistDao().getSongsForPlaylist(playlistId)
+            SpotifyDemo.createPlaylistFromSongs(token, songs)
         }
     }
 }
