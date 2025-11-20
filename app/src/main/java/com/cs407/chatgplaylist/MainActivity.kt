@@ -11,7 +11,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.data.PlaylistDatabase
+import com.cs407.chatgplaylist.data.PlaylistDao
+import com.cs407.chatgplaylist.data.Song
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
+import com.cs407.chatgplaylist.spotify.SpotifySearch
 import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -98,8 +101,46 @@ class MainActivity : ComponentActivity() {
     ): SpotifyDemo.Result {
         return withContext(Dispatchers.IO) {
             val db = PlaylistDatabase.getDatabase(applicationContext)
-            val songs = db.playlistDao().getSongsForPlaylist(playlistId)
-            SpotifyDemo.createPlaylistFromSongs(token, songs)
+            val playlistDao = db.playlistDao()
+            val songs = playlistDao.getSongsForPlaylist(playlistId)
+            val hydrated = ensureSpotifyMatches(token, songs, playlistDao)
+            SpotifyDemo.createPlaylistFromSongs(token, hydrated)
         }
+    }
+
+    private suspend fun ensureSpotifyMatches(
+        token: String,
+        songs: List<Song>,
+        playlistDao: PlaylistDao
+    ): List<Song> {
+        if (songs.isEmpty()) return songs
+        val updatedSongs = mutableListOf<Song>()
+        val changed = mutableListOf<Song>()
+
+        songs.forEach { song ->
+            if (song.spotifyUri.isNullOrEmpty()) {
+                val match = runCatching {
+                    SpotifySearch.searchTrack(token, song.title, song.artist)
+                }.getOrNull()
+                if (match != null) {
+                    val enriched = song.copy(
+                        spotifyUri = match.uri,
+                        spotifyUrl = match.url
+                    )
+                    updatedSongs += enriched
+                    changed += enriched
+                } else {
+                    updatedSongs += song
+                }
+            } else {
+                updatedSongs += song
+            }
+        }
+
+        if (changed.isNotEmpty()) {
+            playlistDao.updateSongs(changed)
+        }
+
+        return updatedSongs
     }
 }

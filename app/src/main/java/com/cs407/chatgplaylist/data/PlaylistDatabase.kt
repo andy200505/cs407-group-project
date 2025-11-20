@@ -66,6 +66,9 @@ interface PlaylistDao {
     @Insert
     suspend fun insertSongs(songs: List<Song>)
 
+    @Update
+    suspend fun updateSongs(songs: List<Song>)
+
     @Transaction
     suspend fun insertPlaylistWithSongs(playlist: Playlist, songs: List<Song>): Long {
         val playlistId = insertPlaylist(playlist)
