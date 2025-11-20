@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "814706800320",
+    "project_id": "chatgplaylist",
+    "storage_bucket": "chatgplaylist.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814706800320:android:2e5f3508d6e279ccb55f25",
+        "android_client_info": {
+          "package_name": "com.cs407.chatgplaylist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWQ46fDTZsEtSP9LPWHd8KFVNUfzdxv3M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
