@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
@@ -14,9 +15,14 @@ import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        val spotifyConnected = mutableStateOf(false)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        spotifyConnected.value = !SpotifyAuth.currentAccessToken().isNullOrEmpty()
         setContent {
             ChatGPlaylisTTheme {
                 AppNavigation()
@@ -32,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     when (result) {
                         is SpotifyAuth.Result.Success -> {
                             Log.d("SpotifyAuth", "Access token received")
+                            spotifyConnected.value = true
                             Toast.makeText(this, "Spotify connected", Toast.LENGTH_SHORT).show()
                         }
                         is SpotifyAuth.Result.Error -> {

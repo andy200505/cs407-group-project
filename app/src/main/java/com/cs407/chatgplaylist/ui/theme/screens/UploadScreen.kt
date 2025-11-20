@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.R
 import com.cs407.chatgplaylist.data.Playlist
 import com.cs407.chatgplaylist.data.PlaylistDatabase
@@ -27,6 +28,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun UploadScreen(navController: NavController, userState: UserState) {
     val context = LocalContext.current
+    val activity = context as? MainActivity
+    val isSpotifyConnected by MainActivity.spotifyConnected
     val db = remember { PlaylistDatabase.getDatabase(context) }
     val playlistDao = db.playlistDao()
     // Load playlists belonging to this Room userId
@@ -163,6 +166,24 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                             .height(48.dp)
                     ) {
                         Text("Submit")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = { activity?.startSpotifyAuth() },
+                        enabled = activity != null,
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(48.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSpotifyConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    ) {
+                        Text(
+                            text = if (isSpotifyConnected) "Spotify Connected" else "Connect Spotify"
+                        )
                     }
                 }
             }

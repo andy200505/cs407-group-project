@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.data.Playlist
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.ui.theme.components.SongItem
@@ -42,6 +43,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlaylistScreen(navController: NavController, playlistId: Int) {
     val context = LocalContext.current
+    val activity = context as? MainActivity
+    val isSpotifyConnected by MainActivity.spotifyConnected
     val db = remember { PlaylistDatabase.getDatabase(context) }
     val playlistDao = db.playlistDao()
     val deleteDao = db.deleteDao()
@@ -110,7 +113,8 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* TODO: integrate with Spotify */ },
+                onClick = { activity?.createDemoPlaylist() },
+                enabled = isSpotifyConnected && activity != null,
                 modifier = Modifier
                     .width(200.dp)
                     .height(48.dp),
