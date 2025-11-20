@@ -55,7 +55,6 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
     LaunchedEffect(playlistId) {
         playlist = playlistDao.getPlaylistById(playlistId)
         titleText = playlist?.title ?: ""
-
         playlist?.let {
             //load songs that were added by the backend AI
             playlistSongs = playlistDao.getSongsForPlaylist(it.playlistId)

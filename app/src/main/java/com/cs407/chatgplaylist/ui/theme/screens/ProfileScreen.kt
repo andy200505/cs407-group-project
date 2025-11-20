@@ -58,7 +58,7 @@ fun ProfileButtons(
             Text("Logout")
         }
 
-        //del account
+        //delete account
         Button(
             onClick = {
                 scope.launch {
@@ -119,7 +119,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                // Profile pic
+                // Profile picture
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = "Profile Picture",
@@ -152,7 +152,7 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Dark mode switch (TODO: implement)
+                // Dark mode switch
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

@@ -130,7 +130,7 @@ abstract class PlaylistDatabase : RoomDatabase() {
                     PlaylistDatabase::class.java,
                     "playlist_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance
                 instance

@@ -132,9 +132,7 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
                         singleLine = false,
-                        maxLines = 3
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))

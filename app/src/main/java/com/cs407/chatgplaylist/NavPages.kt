@@ -87,22 +87,22 @@ fun AppNavigation() {
 
             LaunchedEffect(playlistId) {
                 val playlistDao = db.playlistDao()
-                val userPrompt = navController
+                val prompt = navController
                     .getBackStackEntry("upload")
                     .savedStateHandle
                     .get<String>("prompt")
                     .orEmpty()
-                val prompt = """
+                val finalPrompt = """
                     Create a playlist of about 10 songs based on the following description:
-                    "$userPrompt"
+                    "$prompt"
                     Return ONLY a plain text list of songs, one per line. Each line must be in the exact format: Song name - Artist
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
 
-                val rawText = if (userPrompt.isNotBlank()) {
+                val rawResponse = if (prompt.isNotBlank()) {
                     try {
                         val result = withContext(Dispatchers.IO) {
-                            model.generateContent(prompt)
+                            model.generateContent(finalPrompt)
                         }
                         result.text ?: ""
                     } catch (e: Exception) {
@@ -112,7 +112,7 @@ fun AppNavigation() {
                     "No prompt provided."
                 }
 
-                val items = rawText
+                val songs = rawResponse
                     .lines()
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }
@@ -120,7 +120,7 @@ fun AppNavigation() {
                 val accessToken = SpotifyAuth.currentAccessToken()
 
                 withContext(Dispatchers.IO) {
-                    val songsToInsert = items.map { line ->
+                    val songsToInsert = songs.map { line ->
                         val parts = line.split("-", limit = 2)
                         val title = parts.getOrNull(0)?.trim().orEmpty()
                         val artist = parts.getOrNull(1)?.trim().orEmpty()
@@ -143,9 +143,7 @@ fun AppNavigation() {
                                 )
                             }
                         }
-
                         song
-
                     }
                     if (songsToInsert.isNotEmpty()) {
                         playlistDao.insertSongs(songsToInsert)
