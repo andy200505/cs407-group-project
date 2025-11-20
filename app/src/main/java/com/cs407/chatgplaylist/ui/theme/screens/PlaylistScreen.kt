@@ -105,7 +105,11 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
             ) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(playlistSongs) { song ->
-                        SongItem(title = song.title, artist = song.artist)
+                        SongItem(
+                            title = song.title,
+                            artist = song.artist,
+                            spotifyUrl = song.spotifyUrl
+                        )
                     }
                 }
             }
