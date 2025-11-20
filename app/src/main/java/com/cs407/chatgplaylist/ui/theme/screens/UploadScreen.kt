@@ -1,5 +1,10 @@
 package com.cs407.chatgplaylist.ui.theme.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,13 +20,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.R
 import com.cs407.chatgplaylist.data.Playlist
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.UserState
+import android.net.Uri
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
+import java.io.File
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +44,34 @@ fun UploadScreen(navController: NavController, userState: UserState) {
     // Load playlists belonging to this Room userId
     var playlists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
     var playlistDescription by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun createImageUri(context: Context): Uri {
+        val imageFile = File.createTempFile("playlist_", ".jpg", context.cacheDir)
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            imageUri = tempCameraUri
+        }
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted: Boolean ->
+        if (granted) {
+            val uri = createImageUri(context)
+            tempCameraUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
+
     LaunchedEffect(userState.id) {
         if (userState.id != 0) {
             playlists = playlistDao.getPlaylistsWithSongs(userState.id)
@@ -117,10 +154,32 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                             .border(
                                 BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
                                 shape = RoundedCornerShape(8.dp)
-                            ),
+                            )
+                            .clickable {
+                                val hasPermission =
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.CAMERA
+                                    ) == PackageManager.PERMISSION_GRANTED
+
+                                if (hasPermission) {
+                                    val uri = createImageUri(context)
+                                    tempCameraUri = uri
+                                    cameraLauncher.launch(uri)
+                                } else {
+                                    cameraPermissionLauncher.launch(
+                                        Manifest.permission.CAMERA
+                                    )
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Upload Your Playlist Image")
+                        Text(
+                            text = if (imageUri == null)
+                                "Upload Your Playlist Image"
+                            else
+                                "Image captured"
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -143,6 +202,9 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle
                                     ?.set("prompt", playlistDescription)
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("imageUri", imageUri?.toString())
                                 val tempPlaylist = Playlist(
                                     playlistId = 0,
                                     userId = userState.id,

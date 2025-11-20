@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.cs407.chatgplaylist"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

@@ -1,5 +1,10 @@
 package com.cs407.chatgplaylist
 
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,10 +27,12 @@ import com.cs407.chatgplaylist.ui.theme.screens.PlaylistScreen
 import com.cs407.chatgplaylist.ui.theme.screens.ProfileScreen
 import com.cs407.chatgplaylist.ui.theme.screens.UploadScreen
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonNull.content
 
 @Composable
 fun AppNavigation() {
@@ -87,22 +94,63 @@ fun AppNavigation() {
 
             LaunchedEffect(playlistId) {
                 val playlistDao = db.playlistDao()
-                val prompt = navController
+                val uploadEntry = navController
                     .getBackStackEntry("upload")
+
+                val prompt = uploadEntry
                     .savedStateHandle
                     .get<String>("prompt")
                     .orEmpty()
-                val finalPrompt = """
-                    Create a playlist of about 10 songs based on the following description:
+
+                val imageUriString = uploadEntry
+                    .savedStateHandle
+                    .get<String>("imageUri")
+
+                val bitmap: Bitmap? = imageUriString?.let { uri ->
+                    val finalUri = Uri.parse(uri)
+                    val source = ImageDecoder.createSource(context.contentResolver, finalUri)
+                    ImageDecoder.decodeBitmap(source)
+                }
+
+                val finalPromptBoth = """
+                    Create a playlist of songs based on the following description:
+                    "$prompt" and the image attached.
+                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+                    .trimIndent()
+                val finalPromptImageOnly = """
+                    Create a playlist of songs based on the image attached.
+                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+                    .trimIndent()
+                val finalPromptTextOnly = """
+                    Create a playlist of songs based on the following description:
                     "$prompt"
-                    Return ONLY a plain text list of songs, one per line. Each line must be in the exact format: Song name - Artist
+                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
 
-                val rawResponse = if (prompt.isNotBlank()) {
+                val rawResponse = if (prompt.isNotBlank() || bitmap != null) {
                     try {
                         val result = withContext(Dispatchers.IO) {
-                            model.generateContent(finalPrompt)
+                            if (bitmap != null && prompt.isNotBlank()) {
+                                val input = content {
+                                    image(bitmap)
+                                    text(finalPromptBoth)
+                                }
+                                model.generateContent(input)
+                            } else {
+                                if (bitmap != null && !prompt.isNotBlank()) {
+                                    val input = content {
+                                        image(bitmap)
+                                        text(finalPromptImageOnly)
+                                    }
+                                    model.generateContent(input)
+                                }
+                                else {
+                                    model.generateContent(finalPromptTextOnly)
+                                }
+                            }
                         }
                         result.text ?: ""
                     } catch (e: Exception) {
