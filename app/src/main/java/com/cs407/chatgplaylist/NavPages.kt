@@ -10,10 +10,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.Song
 import com.cs407.chatgplaylist.data.User
 import com.cs407.chatgplaylist.data.UserState
+import com.cs407.chatgplaylist.spotify.SpotifySearch
 import com.cs407.chatgplaylist.ui.theme.screens.LoadingScreen
 import com.cs407.chatgplaylist.ui.theme.screens.LoginPage
 import com.cs407.chatgplaylist.ui.theme.screens.PlaylistScreen
@@ -115,18 +117,34 @@ fun AppNavigation() {
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }
 
+                val accessToken = SpotifyAuth.currentAccessToken()
+
                 withContext(Dispatchers.IO) {
                     val songsToInsert = items.map { line ->
                         val parts = line.split("-", limit = 2)
                         val title = parts.getOrNull(0)?.trim().orEmpty()
                         val artist = parts.getOrNull(1)?.trim().orEmpty()
 
-                        Song(
+                        var song = Song(
                             songId = 0,
                             playlistId = playlistId,
                             title = title,
                             artist = artist
                         )
+
+                        if (!accessToken.isNullOrEmpty() && title.isNotBlank()) {
+                            val match = runCatching {
+                                SpotifySearch.searchTrack(accessToken, title, artist)
+                            }.getOrNull()
+                            if (match != null) {
+                                song = song.copy(
+                                    spotifyUri = match.uri,
+                                    spotifyUrl = match.url
+                                )
+                            }
+                        }
+
+                        song
 
                     }
                     if (songsToInsert.isNotEmpty()) {

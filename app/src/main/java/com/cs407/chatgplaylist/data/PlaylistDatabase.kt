@@ -31,7 +31,9 @@ data class Song(
     @PrimaryKey(autoGenerate = true) val songId: Int = 0,
     val playlistId: Int,
     val title: String,
-    val artist: String
+    val artist: String,
+    val spotifyUri: String? = null,
+    val spotifyUrl: String? = null
 )
 
 data class PlaylistWithSongs(
@@ -108,7 +110,7 @@ interface DeleteDao {
     }
 }
 
-@Database(entities = [User::class, Playlist::class, Song::class], version = 1)
+@Database(entities = [User::class, Playlist::class, Song::class], version = 2)
 abstract class PlaylistDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun playlistDao(): PlaylistDao
@@ -124,7 +126,9 @@ abstract class PlaylistDatabase : RoomDatabase() {
                     context.applicationContext,
                     PlaylistDatabase::class.java,
                     "playlist_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
