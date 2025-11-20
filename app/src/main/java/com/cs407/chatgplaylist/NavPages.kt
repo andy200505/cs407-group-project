@@ -3,8 +3,6 @@ package com.cs407.chatgplaylist
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +30,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonNull.content
+import androidx.core.net.toUri
 
 @Composable
 fun AppNavigation() {
@@ -56,7 +54,6 @@ fun AppNavigation() {
     }
 
     val startDestination = if (Firebase.auth.currentUser != null) "upload" else "login"
-
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
@@ -102,12 +99,12 @@ fun AppNavigation() {
                     .get<String>("prompt")
                     .orEmpty()
 
-                val imageUriString = uploadEntry
+                val imageUri = uploadEntry
                     .savedStateHandle
                     .get<String>("imageUri")
 
-                val bitmap: Bitmap? = imageUriString?.let { uri ->
-                    val finalUri = Uri.parse(uri)
+                val bitmap: Bitmap? = imageUri?.let { uri ->
+                    val finalUri = uri.toUri()
                     val source = ImageDecoder.createSource(context.contentResolver, finalUri)
                     ImageDecoder.decodeBitmap(source)
                 }
@@ -154,7 +151,7 @@ fun AppNavigation() {
                         }
                         result.text ?: ""
                     } catch (e: Exception) {
-                        "Error generating playlist: ${e.message}"
+                        e.message.toString()
                     }
                 } else {
                     "No prompt provided."
