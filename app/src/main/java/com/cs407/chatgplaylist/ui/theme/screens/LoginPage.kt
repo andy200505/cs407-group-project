@@ -256,7 +256,11 @@ fun LoginPage(
                     askName = true
                 }
             else
-                error = taskException?.message
+                error = if (taskException is com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                    "This email is already in use and the password is incorrect." //custom message when email is already linked to an account
+                } else {
+                    taskException?.message
+                }
         }
 
     val user = Firebase.auth.currentUser

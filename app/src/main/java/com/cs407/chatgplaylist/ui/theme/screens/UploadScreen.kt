@@ -220,7 +220,7 @@ fun UploadScreen(navController: NavController, userState: UserState) {
 
                                 val updatedPlaylist = tempPlaylist.copy(
                                     playlistId = newId,
-                                    title = "New Playlist #$newId"
+                                    title = "New Playlist"
                                 )
                                 playlistDao.updatePlaylist(updatedPlaylist)
 

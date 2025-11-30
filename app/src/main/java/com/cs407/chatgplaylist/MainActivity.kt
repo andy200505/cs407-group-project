@@ -7,12 +7,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.PlaylistDao
 import com.cs407.chatgplaylist.data.Song
+import com.cs407.chatgplaylist.data.ThemePreferences
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
 import com.cs407.chatgplaylist.spotify.SpotifySearch
 import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
@@ -30,8 +33,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         spotifyConnected.value = !SpotifyAuth.currentAccessToken().isNullOrEmpty()
         setContent {
-            ChatGPlaylisTTheme {
-                AppNavigation()
+            val context = this
+            val darkModeEnabled by ThemePreferences.getThemeFlow(context)
+                .collectAsState(initial = false)
+
+            ChatGPlaylisTTheme(darkTheme = darkModeEnabled) {
+                AppNavigation(
+                    darkMode = darkModeEnabled,
+                    onToggleDarkMode = {
+                        lifecycleScope.launch {
+                            ThemePreferences.setDarkMode(context, !darkModeEnabled)
+                        }
+                    }
+                )
             }
         }
     }

@@ -33,7 +33,10 @@ import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    darkMode: Boolean,
+    onToggleDarkMode: () -> Unit
+) {
     val navController = rememberNavController()
     var userState by remember { mutableStateOf<UserState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -75,11 +78,19 @@ fun AppNavigation() {
         }
 
         composable("profile") {
-            userState?.let { ProfileScreen(navController, it) }
+            userState?.let {
+                ProfileScreen(
+                    navController = navController,
+                    userState = it,
+                    darkMode = darkMode,
+                    onToggleDarkMode = onToggleDarkMode
+                )
+            }
         }
 
         composable("loading/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
+
             LoadingScreen()
 
             val context = LocalContext.current
@@ -110,21 +121,21 @@ fun AppNavigation() {
                 }
 
                 val finalPromptBoth = """
-                    Create a playlist of songs based on the following description:
-                    "$prompt" and the image attached.
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+            Create a playlist of songs based on the following description:
+            "$prompt" and the image attached.
+            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+            Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptImageOnly = """
-                    Create a playlist of songs based on the image attached.
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+            Create a playlist of songs based on the image attached.
+            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+            Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptTextOnly = """
-                    Create a playlist of songs based on the following description:
-                    "$prompt"
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+            Create a playlist of songs based on the following description:
+            "$prompt"
+            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+            Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
 
                 val rawResponse = if (prompt.isNotBlank() || bitmap != null) {
@@ -200,6 +211,9 @@ fun AppNavigation() {
                 }
             }
         }
+
+
+
 
     }
 }
