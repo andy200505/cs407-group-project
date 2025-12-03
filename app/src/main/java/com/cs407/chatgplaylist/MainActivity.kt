@@ -37,6 +37,11 @@ class MainActivity : ComponentActivity() {
             val darkModeEnabled by ThemePreferences.getThemeFlow(context)
                 .collectAsState(initial = false)
 
+            //makes battery and wifi symbol light when in dark mode
+            val insetsController = androidx.core.view.WindowCompat
+                .getInsetsController(window, window.decorView)
+            insetsController.isAppearanceLightStatusBars = !darkModeEnabled
+
             ChatGPlaylisTTheme(darkTheme = darkModeEnabled) {
                 AppNavigation(
                     darkMode = darkModeEnabled,
