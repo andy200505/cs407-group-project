@@ -1,34 +1,37 @@
 package com.cs407.chatgplaylist.ui.theme
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+//base style applied to all text
+private val AppTextStyle = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Normal,
+)
+
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
+    displayLarge = AppTextStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold),
+    displayMedium = AppTextStyle.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold),
+    displaySmall = AppTextStyle.copy(fontSize = 24.sp, fontWeight = FontWeight.SemiBold),
+
+    headlineLarge = AppTextStyle.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold),
+    headlineMedium = AppTextStyle.copy(fontSize = 20.sp),
+    headlineSmall = AppTextStyle.copy(fontSize = 18.sp),
+
+    titleLarge = AppTextStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold),
+    titleMedium = AppTextStyle.copy(fontSize = 16.sp),
+    titleSmall = AppTextStyle.copy(fontSize = 14.sp),
+
+    bodyLarge = AppTextStyle.copy(fontSize = 16.sp),
+    bodyMedium = AppTextStyle.copy(fontSize = 14.sp),
+    bodySmall = AppTextStyle.copy(fontSize = 12.sp),
+
+    labelLarge = AppTextStyle.copy(fontSize = 14.sp),
+    labelMedium = AppTextStyle.copy(fontSize = 12.sp),
+    labelSmall = AppTextStyle.copy(fontSize = 10.sp)
 )

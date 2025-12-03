@@ -3,6 +3,7 @@ package com.cs407.chatgplaylist
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +59,10 @@ fun AppNavigation(
 
     val startDestination = if (Firebase.auth.currentUser != null) "upload" else "login"
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+    ){
         composable("login") {
             LoginPage() { newUser ->
                 userState = newUser
