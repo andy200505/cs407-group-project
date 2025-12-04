@@ -31,7 +31,9 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
+import com.cs407.chatgplaylist.viewmodels.GeneratingViewModel
 
 @Composable
 fun AppNavigation() {
@@ -83,156 +85,29 @@ fun AppNavigation() {
 
         composable("loading/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
-            LoadingScreen()
+            val GeneratingViewModel: GeneratingViewModel = viewModel()
 
-            val context = LocalContext.current
-            val db = remember { PlaylistDatabase.getDatabase(context) }
-            val model = GenerativeModel(
-                modelName = "gemini-2.0-flash",
-                apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
-            )
+            val uploadEntry = navController.getBackStackEntry("upload")
+            val prompt = uploadEntry.savedStateHandle.get<String>("prompt").orEmpty()
+            val imageUri = uploadEntry.savedStateHandle.get<String>("imageUri")
 
             LaunchedEffect(playlistId) {
-                val playlistDao = db.playlistDao()
-                val uploadEntry = navController
-                    .getBackStackEntry("upload")
-                val historyAccessToken = SpotifyAuth.currentAccessToken()
+                GeneratingViewModel.generatePlaylistFor(
+                    playlistId = playlistId,
+                    prompt = prompt,
+                    imageUriString = imageUri
+                )
+            }
 
-                val recentSongs = if (!historyAccessToken.isNullOrEmpty()) {
-                    try {
-                        SpotifyDemo.fetchRecentTrackNames(historyAccessToken, limit = 20)
-                    } catch (e: Exception) {
-                        emptyList()
+            LaunchedEffect(GeneratingViewModel.isDone) {
+                if (GeneratingViewModel.isDone) {
+                    navController.navigate("playlist/$playlistId") {
+                        popUpTo("upload") { inclusive = false }
                     }
-                } else {
-                    emptyList()
-                }
-
-                val prompt = uploadEntry
-                    .savedStateHandle
-                    .get<String>("prompt")
-                    .orEmpty()
-
-                val imageUri = uploadEntry
-                    .savedStateHandle
-                    .get<String>("imageUri")
-
-                val bitmap: Bitmap? = imageUri?.let { uri ->
-                    val finalUri = uri.toUri()
-                    val source = ImageDecoder.createSource(context.contentResolver, finalUri)
-                    ImageDecoder.decodeBitmap(source)
-                }
-
-                val historyClause = if (recentSongs.isNotEmpty()) {
-                    "Here are some of the user's recently played songs for additional context: " + recentSongs.joinToString(separator = "; ") + ". Use this as a reference when generating new playlists, but do not include any of the songs listed here in the generated playlists."
-                } else {
-                    ""
-                }
-
-                val finalPromptBoth = """
-                    Create a playlist of no more than 10 songs based on the following description:
-                    "$prompt" and the image attached.
-                    $historyClause
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-                val finalPromptImageOnly = """
-                    Create a playlist of no more than 10 songs based on the image attached.
-                    $historyClause
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-                val finalPromptTextOnly = """
-                    Create a playlist of no more than 10 songs based on the following description:
-                    "$prompt"
-                    $historyClause
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-                val finalPromptHistoryOnly = """
-                    Create a playlist of no more than 10 songs based on the following description:
-                    $historyClause
-                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-
-                val rawResponse = if (prompt.isNotBlank() || bitmap != null || recentSongs.isNotEmpty()) {
-                    try {
-                        val result = withContext(Dispatchers.IO) {
-                            if (bitmap != null && prompt.isNotBlank()) {
-                                val input = content {
-                                    image(bitmap)
-                                    text(finalPromptBoth)
-                                }
-                                model.generateContent(input)
-                            } else {
-                                if (bitmap != null && !prompt.isNotBlank()) {
-                                    val input = content {
-                                        image(bitmap)
-                                        text(finalPromptImageOnly)
-                                    }
-                                    model.generateContent(input)
-                                }
-                                else {
-                                    if (bitmap == null && prompt.isNotBlank()) {
-                                        model.generateContent(finalPromptTextOnly)
-                                    }
-                                    else {
-                                        model.generateContent(finalPromptHistoryOnly)
-                                    }
-                                }
-                            }
-                        }
-                        result.text ?: ""
-                    } catch (e: Exception) {
-                        e.message.toString()
-                    }
-                } else {
-                    "You should enter some information to generate playlists."
-                }
-
-                val songs = rawResponse
-                    .lines()
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-
-                val accessToken = SpotifyAuth.currentAccessToken()
-
-                withContext(Dispatchers.IO) {
-                    val songsToInsert = songs.map { line ->
-                        val parts = line.split("-", limit = 2)
-                        val title = parts.getOrNull(0)?.trim().orEmpty()
-                        val artist = parts.getOrNull(1)?.trim().orEmpty()
-
-                        var song = Song(
-                            songId = 0,
-                            playlistId = playlistId,
-                            title = title,
-                            artist = artist
-                        )
-
-                        if (!accessToken.isNullOrEmpty() && title.isNotBlank()) {
-                            val match = runCatching {
-                                SpotifySearch.searchTrack(accessToken, title, artist)
-                            }.getOrNull()
-                            if (match != null) {
-                                song = song.copy(
-                                    spotifyUri = match.uri,
-                                    spotifyUrl = match.url
-                                )
-                            }
-                        }
-                        song
-                    }
-                    if (songsToInsert.isNotEmpty()) {
-                        playlistDao.insertSongs(songsToInsert)
-                    }
-                }
-
-                navController.navigate("playlist/$playlistId") {
-                    popUpTo("upload") { inclusive = false }
                 }
             }
+
+            LoadingScreen()
         }
     }
 }
