@@ -97,7 +97,12 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
                             if (createTask.isSuccessful && auth.currentUser != null) {
                                 handleFirebaseUserSuccess(auth.currentUser!!, onLoginComplete)
                             } else {
-                                error = createTask.exception?.message ?: task.exception?.message
+                                val taskException = createTask.exception
+                                error = if (taskException is com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                                    "This email is already in use and the password is incorrect."
+                                } else {
+                                    taskException?.message ?: task.exception?.message
+                                }
                             }
                         }
                 }
@@ -131,7 +136,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
     ) {
         val displayName = firebaseUser.displayName
         if (displayName.isNullOrBlank()) {
-            // Ask for name on the UI
             askName = true
             return
         }
