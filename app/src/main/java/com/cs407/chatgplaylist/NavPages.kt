@@ -128,27 +128,27 @@ fun AppNavigation() {
                 }
 
                 val finalPromptBoth = """
-                    Create a playlist of songs based on the following description:
+                    Create a playlist of no more than 10 songs based on the following description:
                     "$prompt" and the image attached.
                     $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptImageOnly = """
-                    Create a playlist of songs based on the image attached.
+                    Create a playlist of no more than 10 songs based on the image attached.
                     $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptTextOnly = """
-                    Create a playlist of songs based on the following description:
+                    Create a playlist of no more than 10 songs based on the following description:
                     "$prompt"
                     $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptHistoryOnly = """
-                    Create a playlist of songs based on the following description:
+                    Create a playlist of no more than 10 songs based on the following description:
                     $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
