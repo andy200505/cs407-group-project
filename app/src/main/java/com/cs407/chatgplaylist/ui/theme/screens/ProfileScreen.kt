@@ -31,19 +31,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.UserState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
+import com.cs407.chatgplaylist.viewmodels.ProfileViewModel
 
 
 @Composable
 fun ProfileButtons(
     navLogOut: () -> Unit,
     userState: UserState,
-    playlistDB: PlaylistDatabase,
+    profileViewModel: ProfileViewModel,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -61,14 +63,10 @@ fun ProfileButtons(
         //delete account
         Button(
             onClick = {
-                scope.launch {
-                    // Delete user and all playlists/songs from Room
-                    playlistDB.deleteDao().deleteUserAndPlaylists(userState.id)
-                    // Delete Firebase user
-                    Firebase.auth.currentUser?.delete()?.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            navLogOut() // navigate back to login after deletion
-                        }
+                profileViewModel.deleteAccount(userState.id) { success ->
+                    if (success) {
+                        // After successful deletion, log out + navigate as before
+                        navLogOut()
                     }
                 }
             },
@@ -85,10 +83,10 @@ fun ProfileScreen(
     navController: NavController,
     userState: UserState,
     darkMode: Boolean,
-    onToggleDarkMode: () -> Unit
+    onToggleDarkMode: () -> Unit,
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
     var darkModeEnabled by remember { mutableStateOf(false) }
-    val playlistDB = PlaylistDatabase.getDatabase(LocalContext.current)
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -149,7 +147,7 @@ fun ProfileScreen(
                         }
                     },
                     userState = userState,
-                    playlistDB = playlistDB
+                    profileViewModel = profileViewModel
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))

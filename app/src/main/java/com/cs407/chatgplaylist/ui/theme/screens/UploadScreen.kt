@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.R
@@ -58,20 +59,19 @@ import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.UserState
 import kotlinx.coroutines.launch
 import java.io.File
+import com.cs407.chatgplaylist.viewmodels.UploadViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadScreen(navController: NavController, userState: UserState) {
+fun UploadScreen(navController: NavController, userState: UserState, uploadViewModel: UploadViewModel = viewModel()) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     val isSpotifyConnected by MainActivity.spotifyConnected
-    val db = remember { PlaylistDatabase.getDatabase(context) }
-    val playlistDao = db.playlistDao()
     // Load playlists belonging to this Room userId
-    var playlists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
-    var playlistDescription by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val playlists = uploadViewModel.playlists
+    val playlistDescription = uploadViewModel.playlistDescription
+    val imageUri = uploadViewModel.imageUri
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
     fun createImageUri(context: Context): Uri {
@@ -86,14 +86,13 @@ fun UploadScreen(navController: NavController, userState: UserState) {
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
         if (success) {
-            imageUri = cameraUri
+            uploadViewModel.updateImageUri(cameraUri)
         }
     }
 
     LaunchedEffect(userState.id) {
         if (userState.id != 0) {
-            playlists = playlistDao.getPlaylistsWithSongs(userState.id)
-                .map { it.playlist }  // extract Playlist
+            uploadViewModel.loadPlaylists(userState.id)
         }
     }
 
@@ -192,7 +191,7 @@ fun UploadScreen(navController: NavController, userState: UserState) {
 
                     TextField(
                         value = playlistDescription,
-                        onValueChange = { playlistDescription = it },
+                        onValueChange = { uploadViewModel.updateDescription(it) },
                         placeholder = { Text("Describe your playlist") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -207,23 +206,16 @@ fun UploadScreen(navController: NavController, userState: UserState) {
                             scope.launch {
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle
-                                    ?.set("prompt", playlistDescription)
+                                    ?.set("prompt", uploadViewModel.playlistDescription)
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle
-                                    ?.set("imageUri", imageUri?.toString())
+                                    ?.set("imageUri", uploadViewModel.imageUri?.toString())
                                 val tempPlaylist = Playlist(
                                     playlistId = 0,
                                     userId = userState.id,
                                     title = ""
                                 )
-                                val newId = playlistDao.insertPlaylist(tempPlaylist).toInt()
-
-                                val updatedPlaylist = tempPlaylist.copy(
-                                    playlistId = newId,
-                                    title = "New Playlist"
-                                )
-                                playlistDao.updatePlaylist(updatedPlaylist)
-
+                                val newId = uploadViewModel.createTempPlaylist(userState.id)
                                 navController.navigate("loading/$newId")
                             }
                         },

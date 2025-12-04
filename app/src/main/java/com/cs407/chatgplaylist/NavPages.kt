@@ -3,7 +3,6 @@ package com.cs407.chatgplaylist
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +31,10 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.chatgplaylist.spotify.SpotifyDemo
+import com.cs407.chatgplaylist.viewmodels.GeneratingViewModel
+import androidx.compose.animation.ExperimentalAnimationApi
 
 @Composable
 fun AppNavigation(
@@ -45,7 +48,6 @@ fun AppNavigation(
     val context = LocalContext.current
     val db = PlaylistDatabase.getDatabase(context)
 
-    //init userState if Firebase user exists
     LaunchedEffect(Unit) {
         val currentUser = Firebase.auth.currentUser
         if (currentUser != null) {
@@ -59,17 +61,16 @@ fun AppNavigation(
 
     val startDestination = if (Firebase.auth.currentUser != null) "upload" else "login"
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-    ){
+    NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
-            LoginPage() { newUser ->
-                userState = newUser
-                navController.navigate("upload") {
-                    popUpTo("login") { inclusive = true }
+            LoginPage(
+                onLoginComplete = { newUser ->
+                    userState = newUser
+                    navController.navigate("upload") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
-            }
+            )
         }
 
         composable("upload") {
@@ -94,131 +95,30 @@ fun AppNavigation(
 
         composable("loading/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments!!.getString("playlistId")!!.toInt()
+            val GeneratingViewModel: GeneratingViewModel = viewModel()
 
-            LoadingScreen()
-
-            val context = LocalContext.current
-            val db = remember { PlaylistDatabase.getDatabase(context) }
-            val model = GenerativeModel(
-                modelName = "gemini-2.0-flash",
-                apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
-            )
+            val uploadEntry = navController.getBackStackEntry("upload")
+            val prompt = uploadEntry.savedStateHandle.get<String>("prompt").orEmpty()
+            val imageUri = uploadEntry.savedStateHandle.get<String>("imageUri")
 
             LaunchedEffect(playlistId) {
-                val playlistDao = db.playlistDao()
-                val uploadEntry = navController
-                    .getBackStackEntry("upload")
+                GeneratingViewModel.generatePlaylistFor(
+                    playlistId = playlistId,
+                    prompt = prompt,
+                    imageUriString = imageUri
+                )
+            }
 
-                val prompt = uploadEntry
-                    .savedStateHandle
-                    .get<String>("prompt")
-                    .orEmpty()
-
-                val imageUri = uploadEntry
-                    .savedStateHandle
-                    .get<String>("imageUri")
-
-                val bitmap: Bitmap? = imageUri?.let { uri ->
-                    val finalUri = uri.toUri()
-                    val source = ImageDecoder.createSource(context.contentResolver, finalUri)
-                    ImageDecoder.decodeBitmap(source)
-                }
-
-                val finalPromptBoth = """
-            Create a playlist of songs based on the following description:
-            "$prompt" and the image attached.
-            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-            Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-                val finalPromptImageOnly = """
-            Create a playlist of songs based on the image attached.
-            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-            Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-                val finalPromptTextOnly = """
-            Create a playlist of songs based on the following description:
-            "$prompt"
-            Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
-            Do not include numbers, bullet points, quotes, extra text, or explanations."""
-                    .trimIndent()
-
-                val rawResponse = if (prompt.isNotBlank() || bitmap != null) {
-                    try {
-                        val result = withContext(Dispatchers.IO) {
-                            if (bitmap != null && prompt.isNotBlank()) {
-                                val input = content {
-                                    image(bitmap)
-                                    text(finalPromptBoth)
-                                }
-                                model.generateContent(input)
-                            } else {
-                                if (bitmap != null && !prompt.isNotBlank()) {
-                                    val input = content {
-                                        image(bitmap)
-                                        text(finalPromptImageOnly)
-                                    }
-                                    model.generateContent(input)
-                                }
-                                else {
-                                    model.generateContent(finalPromptTextOnly)
-                                }
-                            }
-                        }
-                        result.text ?: ""
-                    } catch (e: Exception) {
-                        e.message.toString()
+            LaunchedEffect(GeneratingViewModel.isDone) {
+                if (GeneratingViewModel.isDone) {
+                    navController.navigate("playlist/$playlistId") {
+                        popUpTo("upload") { inclusive = false }
                     }
-                } else {
-                    "No prompt provided."
-                }
-
-                val songs = rawResponse
-                    .lines()
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-
-                val accessToken = SpotifyAuth.currentAccessToken()
-
-                withContext(Dispatchers.IO) {
-                    val songsToInsert = songs.map { line ->
-                        val parts = line.split("-", limit = 2)
-                        val title = parts.getOrNull(0)?.trim().orEmpty()
-                        val artist = parts.getOrNull(1)?.trim().orEmpty()
-
-                        var song = Song(
-                            songId = 0,
-                            playlistId = playlistId,
-                            title = title,
-                            artist = artist
-                        )
-
-                        if (!accessToken.isNullOrEmpty() && title.isNotBlank()) {
-                            val match = runCatching {
-                                SpotifySearch.searchTrack(accessToken, title, artist)
-                            }.getOrNull()
-                            if (match != null) {
-                                song = song.copy(
-                                    spotifyUri = match.uri,
-                                    spotifyUrl = match.url
-                                )
-                            }
-                        }
-                        song
-                    }
-                    if (songsToInsert.isNotEmpty()) {
-                        playlistDao.insertSongs(songsToInsert)
-                    }
-                }
-
-                navController.navigate("playlist/$playlistId") {
-                    popUpTo("upload") { inclusive = false }
                 }
             }
+
+            LoadingScreen()
         }
-
-
-
-
     }
 }
 
