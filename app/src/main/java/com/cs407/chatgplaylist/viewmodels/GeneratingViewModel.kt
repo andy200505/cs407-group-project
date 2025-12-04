@@ -25,7 +25,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
     private val db = PlaylistDatabase.getDatabase(application)
     private val playlistDao = db.playlistDao()
 
-    // Simple state so the UI (NavHost) knows when to navigate away
     var isDone by mutableStateOf(false)
         private set
 
@@ -37,20 +36,11 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
         apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
     )
 
-    /**
-     * Same behavior as your original NavPages loading route:
-     *  - Reads prompt + (optional) image
-     *  - Optionally uses listening history
-     *  - Calls Gemini to generate songs
-     *  - Enriches via SpotifySearch when possible
-     *  - Inserts songs into the given playlist
-     */
     fun generatePlaylistFor(
         playlistId: Int,
         prompt: String,
         imageUriString: String?
     ) {
-        // Avoid running multiple times if the composable recomposes
         if (isDone) return
 
         isDone = false
@@ -59,7 +49,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val app = getApplication<Application>()
 
-            // Decode bitmap from the URI (if provided)
             val bitmap: Bitmap? = imageUriString?.let { uriStr ->
                 try {
                     val uri = uriStr.toUri()
@@ -70,7 +59,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
 
-            // Recently played tracks via Spotify
             val historyAccessToken = SpotifyAuth.currentAccessToken()
             val recentSongs = if (!historyAccessToken.isNullOrEmpty()) {
                 try {
@@ -83,7 +71,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
             }
 
             val historyClause = if (recentSongs.isNotEmpty()) {
-                // This matches your original string (with the "..." included)
                 "Here are some of the user's recently played songs for additional context: " + recentSongs.joinToString(separator = "; ") + ". Use this as a reference when generating new playlists, but do not include any of the songs listed here in the generated playlists."
             } else {
                 ""
@@ -161,7 +148,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
 
             val accessToken = SpotifyAuth.currentAccessToken()
 
-            // Insert songs into Room, enriching with Spotify metadata when possible
             withContext(Dispatchers.IO) {
                 val songsToInsert = songs.map { line ->
                     val parts = line.split("-", limit = 2)
@@ -194,7 +180,6 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
 
-            // Let the UI know we're done so it can navigate to the playlist screen
             isDone = true
         }
     }

@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class LoginSignupViewModel(application: Application) : AndroidViewModel(application) {
-
     private val auth: FirebaseAuth = Firebase.auth
     private val db = PlaylistDatabase.getDatabase(application)
     private val userDao = db.userDao()
@@ -49,9 +48,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
         password = newPassword
     }
 
-    /**
-     * Attempt auto-login with an already signed-in Firebase user.
-     */
     fun tryAutoLogin(onLoginComplete: (UserState) -> Unit) {
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -59,10 +55,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    /**
-     * Called when the user taps the Login/Sign Up button.
-     * Performs validation, then sign-in or sign-up with Firebase.
-     */
     fun onLoginClick(onLoginComplete: (UserState) -> Unit) {
         error = null
 
@@ -94,7 +86,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
             return
         }
 
-        // Try sign-in first
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful && auth.currentUser != null) {
@@ -113,10 +104,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
             }
     }
 
-    /**
-     * Called from AskNamePage when the user confirms their name.
-     * Updates the Firebase profile first, then runs the usual success flow.
-     */
     fun confirmName(name: String, onLoginComplete: (UserState) -> Unit) {
         val user = auth.currentUser
         if (user == null) {
@@ -138,10 +125,6 @@ class LoginSignupViewModel(application: Application) : AndroidViewModel(applicat
             }
     }
 
-    /**
-     * Common handler for successful Firebase sign-in / sign-up.
-     * Ensures the user exists in Room and then triggers onLoginComplete.
-     */
     private fun handleFirebaseUserSuccess(
         firebaseUser: FirebaseUser,
         onLoginComplete: (UserState) -> Unit

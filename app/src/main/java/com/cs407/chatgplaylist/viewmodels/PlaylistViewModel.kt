@@ -26,7 +26,6 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
     var playlistSongs by mutableStateOf<List<Song>>(emptyList())
         private set
 
-    // Loads playlist + songs from DB
     fun loadPlaylist(playlistId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val p = playlistDao.getPlaylistById(playlistId)
@@ -40,7 +39,6 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // Updates playlist title in DB
     fun updateTitle(newTitle: String) {
         titleText = newTitle
         val p = playlist ?: return
@@ -49,7 +47,6 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // Deletes playlist + songs (CASCADE)
     fun deletePlaylist(playlistId: Int, onDeleted: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             deleteDao.deletePlaylistAndSongs(playlistId)

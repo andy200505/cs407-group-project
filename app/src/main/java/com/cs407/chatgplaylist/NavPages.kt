@@ -34,6 +34,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cs407.chatgplaylist.spotify.SpotifyDemo
 import com.cs407.chatgplaylist.viewmodels.GeneratingViewModel
+import androidx.compose.animation.ExperimentalAnimationApi
 
 @Composable
 fun AppNavigation() {
@@ -44,7 +45,6 @@ fun AppNavigation() {
     val context = LocalContext.current
     val db = PlaylistDatabase.getDatabase(context)
 
-    //init userState if Firebase user exists
     LaunchedEffect(Unit) {
         val currentUser = Firebase.auth.currentUser
         if (currentUser != null) {

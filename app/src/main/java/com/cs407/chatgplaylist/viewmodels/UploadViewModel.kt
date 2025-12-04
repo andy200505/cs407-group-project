@@ -44,10 +44,6 @@ class UploadViewModel(application: Application) : AndroidViewModel(application) 
         imageUri = uri
     }
 
-    /**
-     * Creates a temporary playlist for this user, sets its title to "New Playlist #<id>",
-     * and returns the new playlistId. Matches the original behavior exactly.
-     */
     suspend fun createTempPlaylist(userId: Int): Int {
         return withContext(Dispatchers.IO) {
             val tempPlaylist = Playlist(
@@ -58,7 +54,7 @@ class UploadViewModel(application: Application) : AndroidViewModel(application) 
 
             val updatedPlaylist = tempPlaylist.copy(
                 playlistId = newId,
-                title = "New Playlist #$newId"
+                title = "New Playlist"
             )
             playlistDao.updatePlaylist(updatedPlaylist)
 
