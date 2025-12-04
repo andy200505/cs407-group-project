@@ -1,5 +1,6 @@
 package com.cs407.chatgplaylist.ui.theme.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cs407.chatgplaylist.R
 import com.cs407.chatgplaylist.data.PlaylistDatabase
 import com.cs407.chatgplaylist.data.User
@@ -36,119 +39,94 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.auth.userProfileChangeRequest
+import com.cs407.chatgplaylist.viewmodels.LoginSignupViewModel
 
 @Composable
 fun ErrorText(error: String?) {
-    if (error != null)
-        Text(text = error, color = Color.Red, textAlign = TextAlign.Center)
+    if (error != null) {
+        Text(
+            text = error,
+            color = Color.Red,
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 @Composable
-fun userEmail(): String {
-    var email by remember { mutableStateOf("") }
-
-    TextField(
-        value = email,
-        onValueChange = { email = it },
-        label = { Text(stringResource(R.string.email_hint)) })
-
-    return email
-}
-
-@Composable
-fun userPassword(): String {
-    var passwd by remember { mutableStateOf("") }
-
-    TextField(
-        value = passwd,
-        onValueChange = { passwd = it },
-        label = { Text(stringResource(R.string.password_hint)) },
-        visualTransformation = PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-    )
-
-    return passwd
-}
-
-fun createAccount(
-    email: String,
-    password: String,
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
+fun LoginPage(
+    modifier: Modifier = Modifier,
+    onLoginComplete: (UserState) -> Unit,
+    LoginSignupViewModel: LoginSignupViewModel = viewModel()
 ) {
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    auth.createUserWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            onComplete(task.isSuccessful, task.exception, auth.currentUser)
-        }
-}
+    val email = LoginSignupViewModel.email
+    val password = LoginSignupViewModel.password
+    val error = LoginSignupViewModel.error
+    val askName = LoginSignupViewModel.askName
 
-fun signIn(
-    email: String,
-    password: String,
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
-) {
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    auth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful)
-                onComplete(task.isSuccessful, task.exception, auth.currentUser)
-            else
-                createAccount(email, password, onComplete)
-        }
-}
+    // Auto-login if there is already a signed-in Firebase user
+    LaunchedEffect(Unit) {
+        LoginSignupViewModel.tryAutoLogin(onLoginComplete)
+    }
 
-//fun hash(input: String): String {
-//    return MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
-//        .fold("") { str, it -> str + "%02x".format(it) }
-//}
+    Scaffold(modifier) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (!askName) {
+                ErrorText(error)
 
-@Composable
-fun LogInSignUpButton(
-    email: String,
-    password: String,
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit
-) {
-    val context = LocalContext.current
-//    val userPasswdKV =
-//        context.getSharedPreferences(context.getString(R.string.userPasswdKV), Context.MODE_PRIVATE)
+                TextField(
+                    value = email,
+                    onValueChange = { LoginSignupViewModel.onEmailChange(it) },
+                    label = { Text(stringResource(R.string.email_hint)) }
+                )
 
-    Button(onClick = {
-        var errorString: String? = null
+                Spacer(modifier = Modifier.height(16.dp))
 
-        val emailResult = checkEmail(email)
-        if (emailResult == EmailResult.Empty) {
-            errorString = context.getString(R.string.empty_email)
-        } else if (emailResult == EmailResult.Invalid) {
-            errorString = context.getString(R.string.invalid_email)
-        }
+                TextField(
+                    value = password,
+                    onValueChange = { LoginSignupViewModel.onPasswordChange(it) },
+                    label = { Text(stringResource(R.string.password_hint)) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
 
-        val passwordResult = checkPassword(password)
-        if (errorString == null) {
-            errorString = when (passwordResult) {
-                PasswordResult.Empty -> {
-                    context.getString(R.string.empty_password)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = { LoginSignupViewModel.onLoginClick(onLoginComplete) }) {
+                    Text(stringResource(R.string.login_button))
                 }
-
-                PasswordResult.Short -> {
-                    context.getString(R.string.short_password)
-                }
-
-                PasswordResult.Invalid -> {
-                    context.getString(R.string.invalid_password)
-                }
-
-                PasswordResult.Valid -> {
-                    null
-                }
+            } else {
+                AskNamePage(
+                    LoginSignupViewModel = LoginSignupViewModel,
+                    onLoginComplete = onLoginComplete
+                )
             }
         }
+    }
+}
 
-        if (errorString != null)
-            onComplete(false, Exception(errorString), null)
-        else
-            signIn(email, password, onComplete)
+@Composable
+fun AskNamePage(
+    LoginSignupViewModel: LoginSignupViewModel,
+    onLoginComplete: (UserState) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+
+    TextField(
+        value = name,
+        onValueChange = { name = it },
+        label = { Text(stringResource(R.string.name_hint)) }
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    Button(onClick = {
+        LoginSignupViewModel.confirmName(name, onLoginComplete)
     }) {
-        Text(stringResource(R.string.login_button))
+        Text(stringResource(R.string.confirm_button))
     }
 }
 
@@ -191,94 +169,4 @@ fun checkPassword(password: String): PasswordResult {
     )
         return PasswordResult.Valid
     return PasswordResult.Invalid
-}
-
-fun updateName(name: String, onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit) {
-    val user = Firebase.auth.currentUser
-
-    val profileUpdates = userProfileChangeRequest {
-        displayName = name
-//        photoUri = Uri.parse("https://example.com/jane-q-user/profile.jpg")
-    }
-
-    user!!.updateProfile(profileUpdates)
-        .addOnCompleteListener { task ->
-            onComplete(task.isSuccessful, task.exception, user)
-        }
-}
-
-@Composable
-fun AskNamePage(
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
-) {
-    var name by remember { mutableStateOf("") }
-
-    TextField(
-        value = name,
-        onValueChange = { name = it },
-        label = { Text(stringResource(R.string.name_hint)) })
-    Spacer(modifier = Modifier.height(16.dp))
-    Button(onClick = {
-        updateName(name, onComplete)
-    }) {
-        Text(stringResource(R.string.confirm_button))
-    }
-}
-
-@Composable
-fun LoginPage(
-    modifier: Modifier = Modifier,
-    onLoginComplete: (UserState) -> Unit
-) {
-    var email: String
-    var password: String
-    var error: String? by remember { mutableStateOf(null) }
-    var askName: Boolean by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val playlistDB = PlaylistDatabase.getDatabase(context)
-
-    val onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit =
-        { isSuccess, taskException, signedUser ->
-            if (isSuccess && signedUser != null)
-                if (signedUser.displayName != null && !signedUser.displayName!!.isEmpty()) {
-                    var user: User?
-                    runBlocking {
-                        user = playlistDB.userDao().getByUID(signedUser.uid)
-                        if (user == null) {
-                            playlistDB.userDao().insert(User(userUID = signedUser.uid))
-                            user = playlistDB.userDao().getByUID(signedUser.uid)
-                        }
-                    }
-                    onLoginComplete(UserState(user!!.userId, signedUser.displayName!!,
-                        signedUser.uid
-                    ))
-                } else {
-                    askName = true
-                }
-            else
-                error = taskException?.message
-        }
-
-    val user = Firebase.auth.currentUser
-    if (user != null) onComplete(true, null, user)
-
-    Scaffold(modifier) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (!askName) {
-                ErrorText(error)
-                email = userEmail()
-                password = userPassword()
-                Spacer(modifier = Modifier.height(16.dp))
-                LogInSignUpButton(email, password, onComplete)
-            } else {
-                AskNamePage(onComplete)
-            }
-        }
-    }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.data.Playlist
@@ -39,27 +40,19 @@ import com.cs407.chatgplaylist.ui.theme.components.SongItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.cs407.chatgplaylist.viewmodels.PlaylistViewModel
 
 @Composable
-fun PlaylistScreen(navController: NavController, playlistId: Int) {
+fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: PlaylistViewModel = viewModel()) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     val isSpotifyConnected by MainActivity.spotifyConnected
-    val db = remember { PlaylistDatabase.getDatabase(context) }
-    val playlistDao = db.playlistDao()
-    val deleteDao = db.deleteDao()
-    val scope = rememberCoroutineScope()
-    var playlist by remember { mutableStateOf<Playlist?>(null) }
-    var titleText by remember { mutableStateOf("") }
-    var playlistSongs by remember { mutableStateOf<List<com.cs407.chatgplaylist.data.Song>>(emptyList()) }
     LaunchedEffect(playlistId) {
-        playlist = playlistDao.getPlaylistById(playlistId)
-        titleText = playlist?.title ?: ""
-        playlist?.let {
-            //load songs that were added by the backend AI
-            playlistSongs = playlistDao.getSongsForPlaylist(it.playlistId)
-        }
+        viewModel.loadPlaylist(playlistId)
     }
+
+    val titleText = viewModel.titleText
+    val playlistSongs = viewModel.playlistSongs
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
@@ -75,12 +68,7 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
             TextField(
                 value = titleText,
                 onValueChange = { newTitle ->
-                    titleText = newTitle
-                    playlist?.let {
-                        scope.launch(Dispatchers.IO) {
-                            playlistDao.updatePlaylist(it.copy(title = newTitle))
-                        }
-                    }
+                    viewModel.updateTitle(newTitle)
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -152,8 +140,10 @@ fun PlaylistScreen(navController: NavController, playlistId: Int) {
                 onClick = {
                     if (playlistId != 0) {
                         // Delete from Room database
-                        CoroutineScope(Dispatchers.IO).launch {
-                            deleteDao.deletePlaylistAndSongs(playlistId)
+                        viewModel.deletePlaylist(playlistId) {
+                            navController.navigate("upload") {
+                                popUpTo("upload") { inclusive = true }
+                            }
                         }
                     }
                     navController.navigate("upload") {

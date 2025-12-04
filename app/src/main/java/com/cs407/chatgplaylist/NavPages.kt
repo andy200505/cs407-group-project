@@ -58,12 +58,14 @@ fun AppNavigation() {
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
-            LoginPage() { newUser ->
-                userState = newUser
-                navController.navigate("upload") {
-                    popUpTo("login") { inclusive = true }
+            LoginPage(
+                onLoginComplete = { newUser ->
+                    userState = newUser
+                    navController.navigate("upload") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
-            }
+            )
         }
 
         composable("upload") {
@@ -232,7 +234,6 @@ fun AppNavigation() {
                 }
             }
         }
-
     }
 }
 
