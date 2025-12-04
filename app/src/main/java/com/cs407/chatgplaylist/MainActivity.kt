@@ -22,9 +22,6 @@ import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.cs407.chatgplaylist.data.ThemePreferences
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
 class MainActivity : ComponentActivity() {
 
