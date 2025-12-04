@@ -86,6 +86,8 @@ fun ProfileButtons(
 fun ProfileScreen(
     navController: NavController,
     userState: UserState,
+    darkMode: Boolean,
+    onToggleDarkMode: () -> Unit,
     profileViewModel: ProfileViewModel = viewModel()
 ) {
 
@@ -168,8 +170,8 @@ fun ProfileScreen(
                 ) {
                     Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
                     Switch(
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it }
+                        checked = darkMode,
+                        onCheckedChange = { onToggleDarkMode() }
                     )
                 }
 

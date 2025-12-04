@@ -37,7 +37,10 @@ import com.cs407.chatgplaylist.viewmodels.GeneratingViewModel
 import androidx.compose.animation.ExperimentalAnimationApi
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    darkMode: Boolean,
+    onToggleDarkMode: () -> Unit
+) {
     val navController = rememberNavController()
     var userState by remember { mutableStateOf<UserState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -80,7 +83,14 @@ fun AppNavigation() {
         }
 
         composable("profile") {
-            userState?.let { ProfileScreen(navController, it) }
+            userState?.let {
+                ProfileScreen(
+                    navController = navController,
+                    userState = it,
+                    darkMode = darkMode,
+                    onToggleDarkMode = onToggleDarkMode
+                )
+            }
         }
 
         composable("loading/{playlistId}") { backStackEntry ->
