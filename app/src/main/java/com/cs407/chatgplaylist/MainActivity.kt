@@ -19,6 +19,9 @@ import com.cs407.chatgplaylist.ui.theme.ChatGPlaylisTTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.cs407.chatgplaylist.data.ThemePreferences
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 class MainActivity : ComponentActivity() {
 
@@ -30,8 +33,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         spotifyConnected.value = !SpotifyAuth.currentAccessToken().isNullOrEmpty()
         setContent {
-            ChatGPlaylisTTheme {
-                AppNavigation()
+            val context = this
+            val darkModeEnabled by ThemePreferences.getThemeFlow(context)
+                .collectAsState(initial = false)
+
+            //makes battery and wifi symbol light when in dark mode
+            val insetsController = androidx.core.view.WindowCompat
+                .getInsetsController(window, window.decorView)
+            insetsController.isAppearanceLightStatusBars = !darkModeEnabled
+
+            ChatGPlaylisTTheme(darkTheme = darkModeEnabled) {
+                AppNavigation(
+                    darkMode = darkModeEnabled,
+                    onToggleDarkMode = {
+                        lifecycleScope.launch {
+                            ThemePreferences.setDarkMode(context, !darkModeEnabled)
+                        }
+                    }
+                )
             }
         }
     }
