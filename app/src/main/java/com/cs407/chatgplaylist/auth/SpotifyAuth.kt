@@ -17,7 +17,7 @@ object SpotifyAuth {
     private const val AUTH_ENDPOINT = "$AUTH_BASE/authorize"
     private const val TOKEN_ENDPOINT = "$AUTH_BASE/api/token"
     private const val SCOPE =
-        "user-read-email user-read-private playlist-modify-private playlist-modify-public"
+        "user-read-email user-read-private playlist-modify-private playlist-modify-public user-read-recently-played"
 
     sealed class Result {
         data class Success(val accessToken: String, val refreshToken: String?) : Result()

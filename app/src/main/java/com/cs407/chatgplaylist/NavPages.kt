@@ -31,6 +31,7 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import com.cs407.chatgplaylist.spotify.SpotifyDemo
 
 @Composable
 fun AppNavigation() {
@@ -93,6 +94,17 @@ fun AppNavigation() {
                 val playlistDao = db.playlistDao()
                 val uploadEntry = navController
                     .getBackStackEntry("upload")
+                val historyAccessToken = SpotifyAuth.currentAccessToken()
+
+                val recentSongs = if (!historyAccessToken.isNullOrEmpty()) {
+                    try {
+                        SpotifyDemo.fetchRecentTrackNames(historyAccessToken, limit = 20)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } else {
+                    emptyList()
+                }
 
                 val prompt = uploadEntry
                     .savedStateHandle
@@ -109,25 +121,40 @@ fun AppNavigation() {
                     ImageDecoder.decodeBitmap(source)
                 }
 
+                val historyClause = if (recentSongs.isNotEmpty()) {
+                    "Here are some of the user's recently played songs for additional context: " + recentSongs.joinToString(separator = "; ") + ". Use this as a reference when generating new playlists, but do not include any of the songs listed here in the generated playlists."
+                } else {
+                    ""
+                }
+
                 val finalPromptBoth = """
                     Create a playlist of songs based on the following description:
                     "$prompt" and the image attached.
+                    $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptImageOnly = """
                     Create a playlist of songs based on the image attached.
+                    $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
                 val finalPromptTextOnly = """
                     Create a playlist of songs based on the following description:
                     "$prompt"
+                    $historyClause
+                    Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
+                    Do not include numbers, bullet points, quotes, extra text, or explanations."""
+                    .trimIndent()
+                val finalPromptHistoryOnly = """
+                    Create a playlist of songs based on the following description:
+                    $historyClause
                     Return only a list of songs. The format is one per line, and each line must be in the exact format of "Song name - Artist".
                     Do not include numbers, bullet points, quotes, extra text, or explanations."""
                     .trimIndent()
 
-                val rawResponse = if (prompt.isNotBlank() || bitmap != null) {
+                val rawResponse = if (prompt.isNotBlank() || bitmap != null || recentSongs.isNotEmpty()) {
                     try {
                         val result = withContext(Dispatchers.IO) {
                             if (bitmap != null && prompt.isNotBlank()) {
@@ -145,7 +172,12 @@ fun AppNavigation() {
                                     model.generateContent(input)
                                 }
                                 else {
-                                    model.generateContent(finalPromptTextOnly)
+                                    if (bitmap == null && prompt.isNotBlank()) {
+                                        model.generateContent(finalPromptTextOnly)
+                                    }
+                                    else {
+                                        model.generateContent(finalPromptHistoryOnly)
+                                    }
                                 }
                             }
                         }
@@ -154,7 +186,7 @@ fun AppNavigation() {
                         e.message.toString()
                     }
                 } else {
-                    "No prompt provided."
+                    "You should enter some information to generate playlists."
                 }
 
                 val songs = rawResponse

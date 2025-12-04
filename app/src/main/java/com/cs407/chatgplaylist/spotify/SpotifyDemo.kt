@@ -128,4 +128,37 @@ object SpotifyDemo {
             }
         }
     }
+
+    suspend fun fetchRecentTrackNames( accessToken: String, limit: Int = 20 ): List<String> = withContext(Dispatchers.IO) {
+        val url = "https://api.spotify.com/v1/me/player/recently-played?limit=$limit"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@withContext emptyList()
+                }
+
+                val body = response.body?.string().orEmpty()
+                val json = JSONObject(body)
+                val items = json.optJSONArray("items") ?: return@withContext emptyList<String>()
+
+                val names = mutableListOf<String>()
+                for (i in 0 until items.length()) {
+                    val item = items.optJSONObject(i) ?: continue
+                    val track = item.optJSONObject("track") ?: continue
+                    val name = track.optString("name")
+                    if (name.isNotBlank()) {
+                        names += name
+                    }
+                }
+                names
+            }
+        } catch (e: IOException) {
+            emptyList()
+        }
+    }
 }
