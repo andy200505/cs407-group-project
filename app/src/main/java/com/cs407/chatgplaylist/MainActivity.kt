@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.lifecycleScope
 import com.cs407.chatgplaylist.auth.SpotifyAuth
 import com.cs407.chatgplaylist.data.PlaylistDatabase
@@ -20,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
 class MainActivity : ComponentActivity() {
 
     companion object {
@@ -30,8 +32,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         spotifyConnected.value = !SpotifyAuth.currentAccessToken().isNullOrEmpty()
         setContent {
-            ChatGPlaylisTTheme {
-                AppNavigation()
+            val darkTheme = rememberSaveable { mutableStateOf(false) }
+
+            ChatGPlaylisTTheme(darkTheme = darkTheme.value) {
+                AppNavigation(
+                    darkTheme = darkTheme.value,
+                    onToggleDarkTheme = { darkTheme.value = !darkTheme.value }
+                )
             }
         }
     }

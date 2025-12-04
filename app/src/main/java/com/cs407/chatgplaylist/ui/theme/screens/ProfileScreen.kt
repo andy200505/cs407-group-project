@@ -83,9 +83,11 @@ fun ProfileButtons(
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    userState: UserState
+    userState: UserState,
+    darkTheme: Boolean,
+    onToggleDarkTheme: () -> Unit
 ) {
-    var darkModeEnabled by remember { mutableStateOf(false) }
+//    var darkModeEnabled by remember { mutableStateOf(false) }
     val playlistDB = PlaylistDatabase.getDatabase(LocalContext.current)
 
     Scaffold(
@@ -160,8 +162,8 @@ fun ProfileScreen(
                 ) {
                     Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
                     Switch(
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it }
+                        checked = darkTheme,
+                        onCheckedChange = { onToggleDarkTheme() }
                     )
                 }
             }
