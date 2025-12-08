@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerValue
@@ -36,6 +37,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
@@ -76,6 +78,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
     val playlistDescription = uploadViewModel.playlistDescription
     val imageUri = uploadViewModel.imageUri
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var showImageSourceDialog by remember { mutableStateOf(false) }
 
     fun createImageUri(context: Context): Uri {
         val imageFile = File.createTempFile("playlist_", ".jpg", context.cacheDir)
@@ -93,6 +96,14 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
         }
     }
 
+    val photosLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            uploadViewModel.updateImageUri(selectedUri)
+        }
+    }
+
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -103,7 +114,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
         }
     }
 
-    fun requestCameraPermissionAndOpenCamera() {
+    fun requestPermissionAndOpenCamera() {
         val uri = createImageUri(context)
         cameraUri = uri
 
@@ -117,6 +128,10 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
+    }
+
+    fun openImageSourceChooser() {
+        showImageSourceDialog = true
     }
 
     LaunchedEffect(userState.id) {
@@ -202,7 +217,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .clickable {
-                                requestCameraPermissionAndOpenCamera()
+                                openImageSourceChooser()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -270,6 +285,34 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                             text = if (isSpotifyConnected) "Spotify Connected" else "Connect Spotify"
                         )
                     }
+                }
+
+                if (showImageSourceDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showImageSourceDialog = false },
+                        title = { Text("Upload Image") },
+                        text = { Text("Choose where do you want to add your playlist image.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showImageSourceDialog = false
+                                    requestPermissionAndOpenCamera()
+                                }
+                            ) {
+                                Text("Camera")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    showImageSourceDialog = false
+                                    photosLauncher.launch("image/*")
+                                }
+                            ) {
+                                Text("Photos")
+                            }
+                        }
+                    )
                 }
             }
         }

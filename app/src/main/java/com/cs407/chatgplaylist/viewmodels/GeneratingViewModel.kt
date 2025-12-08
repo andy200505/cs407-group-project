@@ -19,6 +19,7 @@ import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.cs407.chatgplaylist.BuildConfig
 
 class GeneratingViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -32,8 +33,8 @@ class GeneratingViewModel(application: Application) : AndroidViewModel(applicati
         private set
 
     private val model = GenerativeModel(
-        modelName = "gemini-2.0-flash",
-        apiKey = "AIzaSyB8iOC4iY171dHIXznqJy3L97Xp_spMEgc"
+        modelName = "gemini-2.5-flash-lite",
+        apiKey = BuildConfig.GEMINI_API_KEY
     )
 
     fun generatePlaylistFor(

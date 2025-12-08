@@ -5,7 +5,9 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version "2.2.20"
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
+
 
 android {
     namespace = "com.cs407.chatgplaylist"
@@ -22,6 +24,9 @@ android {
         )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -43,6 +48,9 @@ android {
     buildFeatures {
         compose = true
     }
+}
+secrets {
+    propertiesFileName = "secrets.properties"
 }
 
 dependencies {
