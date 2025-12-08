@@ -1,6 +1,8 @@
 package com.cs407.chatgplaylist.ui.theme.screens
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -87,6 +90,32 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
     ) { success: Boolean ->
         if (success) {
             uploadViewModel.updateImageUri(cameraUri)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            cameraUri?.let { uri ->
+                cameraLauncher.launch(uri)
+            }
+        }
+    }
+
+    fun requestCameraPermissionAndOpenCamera() {
+        val uri = createImageUri(context)
+        cameraUri = uri
+
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            cameraLauncher.launch(uri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -173,9 +202,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .clickable {
-                                val uri = createImageUri(context)
-                                cameraUri = uri
-                                cameraLauncher.launch(uri)
+                                requestCameraPermissionAndOpenCamera()
                             },
                         contentAlignment = Alignment.Center
                     ) {
