@@ -1,11 +1,16 @@
 package com.cs407.chatgplaylist.ui.theme.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
@@ -31,6 +36,23 @@ import com.cs407.chatgplaylist.data.UserState
 //import java.security.MessageDigest
 import com.cs407.chatgplaylist.viewmodels.LoginSignupViewModel
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import com.cs407.chatgplaylist.ui.theme.LightBlueHeader
+
+
 @Composable
 fun ErrorText(error: String?) {
     if (error != null) {
@@ -41,6 +63,80 @@ fun ErrorText(error: String?) {
         )
     }
 }
+
+
+@Composable
+fun StyledEmailField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.email_hint)) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Email,
+                contentDescription = "Email"
+            )
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth(0.85f),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+            cursorColor = MaterialTheme.colorScheme.primary
+        )
+    )
+}
+
+@Composable
+fun StyledPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.password_hint)) },
+        singleLine = true,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Lock,
+                contentDescription = "Password"
+            )
+        },
+        trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(
+                    imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                )
+            }
+        },
+        visualTransformation = if (passwordVisible) {
+            androidx.compose.ui.text.input.VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth(0.85f),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+            cursorColor = MaterialTheme.colorScheme.primary
+        )
+    )
+}
+
+
+
 
 @Composable
 fun LoginPage(
@@ -63,38 +159,90 @@ fun LoginPage(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
-            if (!askName) {
-                ErrorText(error)
 
-                TextField(
-                    value = email,
-                    onValueChange = { LoginSignupViewModel.onEmailChange(it) },
-                    label = { Text(stringResource(R.string.email_hint)) }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.35f)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                LightBlueHeader,
+                                LightBlueHeader.copy(alpha = 0.6f),
+                                LightBlueHeader.copy(alpha = 0.3f),
+                                Color.Transparent
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.chatgplaylist_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(140.dp)
+                        .padding(bottom = 12.dp)
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
-                    value = password,
-                    onValueChange = { LoginSignupViewModel.onPasswordChange(it) },
-                    label = { Text(stringResource(R.string.password_hint)) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+//            Spacer(modifier = Modifier.height(80.dp))
 
-                Button(onClick = { LoginSignupViewModel.onLoginClick(onLoginComplete) }) {
-                    Text(stringResource(R.string.login_button))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.75f)
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 24.dp,
+                            topEnd = 24.dp
+                        )
+                    )
+                    .background(Color.White)
+                    .padding(
+                        top = 32.dp,
+                        bottom = 32.dp,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!askName) {
+                    ErrorText(error)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    StyledEmailField(
+                        value = email,
+                        onValueChange = { LoginSignupViewModel.onEmailChange(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    StyledPasswordField(
+                        value = password,
+                        onValueChange = { LoginSignupViewModel.onPasswordChange(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { LoginSignupViewModel.onLoginClick(onLoginComplete) },
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(48.dp)
+                    ) {
+                        Text(stringResource(R.string.login_button))
+                    }
+                } else {
+                    AskNamePage(
+                        LoginSignupViewModel = LoginSignupViewModel,
+                        onLoginComplete = onLoginComplete
+                    )
                 }
-            } else {
-                AskNamePage(
-                    LoginSignupViewModel = LoginSignupViewModel,
-                    onLoginComplete = onLoginComplete
-                )
             }
         }
     }

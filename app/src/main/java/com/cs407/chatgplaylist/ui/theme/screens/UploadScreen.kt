@@ -7,6 +7,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +52,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -65,6 +70,12 @@ import com.cs407.chatgplaylist.data.UserState
 import kotlinx.coroutines.launch
 import java.io.File
 import com.cs407.chatgplaylist.viewmodels.UploadViewModel
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.cs407.chatgplaylist.ui.theme.CyanHeader
+import com.cs407.chatgplaylist.ui.theme.LightBlueHeader
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -185,7 +196,12 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = CyanHeader,
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
+                    )
                 )
             }
         ) { innerPadding ->
@@ -194,6 +210,19 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                LightBlueHeader,
+                                LightBlueHeader.copy(alpha = 0.85f),
+                                LightBlueHeader.copy(alpha = 0.55f),
+                                LightBlueHeader.copy(alpha = 0.25f),
+                                Color.Transparent
+                            ),
+                            startY = 0f,
+                            endY = 900f
+                        )
+                    )
             ) {
                 Column(
                     modifier = Modifier
@@ -211,22 +240,28 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
 
                     Box(
                         modifier = Modifier
-                            .size(250.dp)
-                            .border(
-                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable {
-                                openImageSourceChooser()
-                            },
+                            .size(180.dp) // slightly smaller and cleaner than 250dp box
+                            .clickable { openImageSourceChooser() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = if (imageUri == null)
-                                "Upload Your Playlist Image"
-                            else
-                                "Image captured"
-                        )
+
+                        if (imageUri == null) {
+                            // Show camera icon when no image selected
+                            Image(
+                                painter = painterResource(R.drawable.camera),
+                                contentDescription = "Upload Playlist Image",
+                                modifier = Modifier.size(100.dp)
+                            )
+                        } else {
+                            // Show selected image preview
+                            Image(
+                                painter = rememberAsyncImagePainter(imageUri),
+                                contentDescription = "Selected Playlist Image",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -317,6 +352,10 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
             }
         }
     }
+}
+
+private fun BoxScope.rememberAsyncImagePainter(imageUri: Uri): Painter {
+    TODO("Not yet implemented")
 }
 
 

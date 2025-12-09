@@ -1,6 +1,7 @@
 package com.cs407.chatgplaylist.ui.theme.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ import androidx.navigation.NavController
 import com.cs407.chatgplaylist.MainActivity
 import com.cs407.chatgplaylist.data.Playlist
 import com.cs407.chatgplaylist.data.PlaylistDatabase
+import com.cs407.chatgplaylist.ui.theme.LightBlueHeader
 import com.cs407.chatgplaylist.ui.theme.components.SongItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +66,19 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            LightBlueHeader,
+                            LightBlueHeader.copy(alpha = 0.75f),
+                            LightBlueHeader.copy(alpha = 0.45f),
+                            LightBlueHeader.copy(alpha = 0.15f),
+                            Color.Transparent
+                        ),
+                        startY = 0f,
+                        endY = 950f
+                    )
+                )
                 .padding(innerPadding)
         ) {
             IconButton(
@@ -115,6 +131,7 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(400.dp)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp))
                         .border(
                             BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                             shape = RoundedCornerShape(12.dp)
