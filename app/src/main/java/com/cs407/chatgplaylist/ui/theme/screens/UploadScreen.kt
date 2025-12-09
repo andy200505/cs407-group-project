@@ -73,8 +73,13 @@ import java.io.File
 import com.cs407.chatgplaylist.viewmodels.UploadViewModel
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.cs407.chatgplaylist.ui.theme.CyanHeader
 import com.cs407.chatgplaylist.ui.theme.LightBlueHeader
 
@@ -222,7 +227,25 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                 ) {
                     Text(
                         text = stringResource(id = R.string.app_name),
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        ),
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .graphicsLayer(alpha = 0.99f)
+                            .drawWithCache {
+                                val gradient = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFF0A3D91),
+                                        Color(0xFF66A8FF)
+                                    )
+                                )
+                                onDrawWithContent {
+                                    drawContent()
+                                    drawRect(gradient, blendMode = BlendMode.SrcAtop)
+                                }
+                            }
                     )
 
                     Spacer(modifier = Modifier.height(40.dp))
