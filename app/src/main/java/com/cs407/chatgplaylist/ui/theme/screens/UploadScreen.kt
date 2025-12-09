@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,7 +81,7 @@ import com.cs407.chatgplaylist.ui.theme.LightBlueHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadScreen(navController: NavController, userState: UserState, uploadViewModel: UploadViewModel = viewModel()) {
+fun UploadScreen(navController: NavController, userState: UserState, uploadViewModel: UploadViewModel = viewModel(), darkMode: Boolean = isSystemInDarkTheme()) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     val isSpotifyConnected by MainActivity.spotifyConnected
@@ -209,20 +210,20 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 LightBlueHeader,
-                                LightBlueHeader.copy(alpha = 0.85f),
-                                LightBlueHeader.copy(alpha = 0.55f),
-                                LightBlueHeader.copy(alpha = 0.25f),
+                                LightBlueHeader.copy(alpha = 0.75f),
+                                LightBlueHeader.copy(alpha = 0.45f),
+                                LightBlueHeader.copy(alpha = 0.15f),
                                 Color.Transparent
                             ),
                             startY = 0f,
                             endY = 900f
                         )
                     )
+                    .padding(innerPadding)
             ) {
                 Column(
                     modifier = Modifier
@@ -240,7 +241,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
 
                     Box(
                         modifier = Modifier
-                            .size(180.dp) // slightly smaller and cleaner than 250dp box
+                            .size(180.dp)
                             .clickable { openImageSourceChooser() },
                         contentAlignment = Alignment.Center
                     ) {
