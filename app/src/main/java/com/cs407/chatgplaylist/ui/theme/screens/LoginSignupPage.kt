@@ -188,27 +188,18 @@ fun LoginPage(
             }
 
 
-
-//            Spacer(modifier = Modifier.height(80.dp))
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.75f)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 24.dp,
-                            topEnd = 24.dp
-                        )
-                    )
-                    .background(Color.White)
+                    .weight(0.65f)
                     .padding(
                         top = 32.dp,
                         bottom = 32.dp,
                         start = 24.dp,
                         end = 24.dp
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
                 if (!askName) {
                     ErrorText(error)

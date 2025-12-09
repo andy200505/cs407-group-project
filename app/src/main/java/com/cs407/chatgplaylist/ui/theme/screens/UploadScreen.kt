@@ -210,19 +210,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                LightBlueHeader,
-                                LightBlueHeader.copy(alpha = 0.75f),
-                                LightBlueHeader.copy(alpha = 0.45f),
-                                LightBlueHeader.copy(alpha = 0.15f),
-                                Color.Transparent
-                            ),
-                            startY = 0f,
-                            endY = 900f
-                        )
-                    )
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(innerPadding)
             ) {
                 Column(

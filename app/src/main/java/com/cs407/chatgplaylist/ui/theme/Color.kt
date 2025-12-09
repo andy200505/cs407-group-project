@@ -12,5 +12,7 @@ val Pink40 = Color(0xFF7D5260)
 
 val LightBlueHeader = Color(0xFFB3D9FF)
 
-val CyanHeader = Color(0xFF1A2F6B)
+val CyanHeader = Color(0xFF123B7A)
+
+val LoginDarkSection = Color(0xFF2C2C2C)
 
