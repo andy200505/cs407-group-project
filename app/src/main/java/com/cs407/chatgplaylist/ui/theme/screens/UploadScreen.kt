@@ -267,7 +267,7 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                         } else {
                             // Show selected image preview
                             Image(
-                                painter = rememberAsyncImagePainter(imageUri),
+                                painter = painterResource(R.drawable.camera),
                                 contentDescription = "Selected Playlist Image",
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -366,9 +366,6 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
     }
 }
 
-private fun BoxScope.rememberAsyncImagePainter(imageUri: Uri): Painter {
-    TODO("Not yet implemented")
-}
 
 
 @Composable
