@@ -22,6 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -131,7 +133,10 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(400.dp)
-                        .background(Color.White, shape = RoundedCornerShape(12.dp))
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            shape = RoundedCornerShape(12.dp)
+                        )
                         .border(
                             BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                             shape = RoundedCornerShape(12.dp)
@@ -163,7 +168,12 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(text = "Add to Spotify", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        text = "Add to Spotify",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -178,16 +188,20 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
                         .height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Save Playlist", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        text = "Save Playlist",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 //delete playlist
-                Button(
+                OutlinedButton(
                     onClick = {
                         if (playlistId != 0) {
-                            // Delete from Room database
                             viewModel.deletePlaylist(playlistId) {
                                 navController.navigate("upload") {
                                     popUpTo("upload") { inclusive = true }
@@ -201,13 +215,15 @@ fun PlaylistScreen(navController: NavController, playlistId: Int, viewModel: Pla
                     modifier = Modifier
                         .width(200.dp)
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red,
-                        contentColor = Color.White
-                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Delete Playlist")
+                    Text(
+                        text = "Delete Playlist",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
             }
 

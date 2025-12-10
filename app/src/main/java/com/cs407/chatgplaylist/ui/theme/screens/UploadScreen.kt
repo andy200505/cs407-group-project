@@ -299,11 +299,6 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                                 navController.currentBackStackEntry
                                     ?.savedStateHandle
                                     ?.set("imageUri", uploadViewModel.imageUri?.toString())
-                                val tempPlaylist = Playlist(
-                                    playlistId = 0,
-                                    userId = userState.id,
-                                    title = ""
-                                )
                                 val newId = uploadViewModel.createTempPlaylist(userState.id)
                                 navController.navigate("loading/$newId")
                             }
@@ -312,7 +307,12 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                             .width(200.dp)
                             .height(48.dp)
                     ) {
-                        Text("Submit")
+                        Text(
+                            text = "Submit",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -329,7 +329,10 @@ fun UploadScreen(navController: NavController, userState: UserState, uploadViewM
                         )
                     ) {
                         Text(
-                            text = if (isSpotifyConnected) "Spotify Connected" else "Connect Spotify"
+                            text = if (isSpotifyConnected) "Spotify Connected" else "Connect Spotify",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                     }
                 }
